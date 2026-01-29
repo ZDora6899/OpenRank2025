@@ -269,3 +269,136 @@
         #close-btn:hover { opacity: 1; }
     </style>
 </head>
+<body>
+    <div id="container"></div>
+
+    <div id="header">
+        <h1>Global Dev Matrix</h1>
+        <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">全球开发者多维数据分析系统</div>
+        
+        <div class="view-switcher">
+            <button class="view-btn active" onclick="switchView('count')">👥 总量视图 / Count</button>
+            <button class="view-btn" onclick="switchView('growth')">📈 增长视图 / Growth</button>
+        </div>
+    </div>
+
+    <!-- 左侧搜索与图例 -->
+    <div id="leftPanel" class="glass-panel">
+        <div class="search-box">
+            <input type="text" id="countrySearch" placeholder="🔍 Search Country..." autocomplete="off">
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-title">Overview</div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <span class="val">242</span>
+                    <span class="lbl">Regions</span>
+                </div>
+                <div class="stat-card">
+                    <span class="val" style="color:var(--growth-color)">+12.8%</span>
+                    <span class="lbl">YoY Growth</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-title">Color Legend</div>
+            <div id="legendList" style="font-size: 12px; line-height: 1.8;"></div>
+        </div>
+    </div>
+
+    <!-- 左下角：区域数据汇总 -->
+    <div id="bottomLeftPanel" class="glass-panel">
+        <div class="panel-title">Regional Analysis</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Region</th>
+                    <th style="text-align:right">Total Devs</th>
+                    <th style="text-align:right">Avg Growth</th>
+                </tr>
+            </thead>
+            <tbody id="regionTableBody">
+                <!-- JS Populated -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 右侧排行榜 (默认显示) -->
+    <div id="rankPanel" class="glass-panel">
+        <div class="panel-title">Top 10 Hubs</div>
+        <div id="rankingList"></div>
+    </div>
+
+    <!-- 右侧详细分析面板 (点击触发) -->
+    <div id="rightPanel" class="glass-panel" style="padding: 20px;">
+        <button id="close-btn" onclick="closeDashboard()">×</button>
+        <h2 id="dash-title" style="margin: 0 0 5px 0; color: var(--primary-color);">Country Name</h2>
+        <div id="dash-continent" style="font-size: 12px; color: #aaa; margin-bottom: 20px;">Continent</div>
+
+        <!-- 核心指标 -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <span class="val" id="dash-count">0</span>
+                <span class="lbl">Total Devs</span>
+            </div>
+            <div class="stat-card">
+                <span class="val" id="dash-growth" style="color: var(--growth-color)">0%</span>
+                <span class="lbl">Growth Rate</span>
+            </div>
+            <div class="stat-card">
+                <span class="val" id="dash-rank">#0</span>
+                <span class="lbl">Global Rank</span>
+            </div>
+            <div class="stat-card">
+                <span class="val" id="dash-score">0.0</span>
+                <span class="lbl">Open Score</span>
+            </div>
+        </div>
+
+        <!-- 5年趋势图 -->
+        <div class="panel-section">
+            <div class="panel-title">5-Year Growth Trend</div>
+            <div class="chart-container" id="trendChart">
+                <!-- SVG inserted by JS -->
+            </div>
+        </div>
+
+        <!-- 技术栈分布 -->
+        <div class="panel-section">
+            <div class="panel-title">Tech Stack Focus</div>
+            <div id="techStackList">
+                <!-- JS Populated -->
+            </div>
+        </div>
+
+        <!-- 能力雷达 -->
+        <div class="panel-section">
+            <div class="panel-title">Ecosystem Maturity</div>
+            <div class="chart-container" style="height: 160px; display: flex; justify-content: center;" id="radarChart">
+                <!-- SVG inserted by JS -->
+            </div>
+        </div>
+    </div>
+
+    <div id="tooltip"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Shader Code -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+        varying vec3 vNormal;
+        void main() {
+            vNormal = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        varying vec3 vNormal;
+        uniform vec3 glowColor;
+        void main() {
+            float intensity = pow(0.7 - dot(vNormal, vec3(0, 0, 1.0)), 4.0);
+            gl_FragColor = vec4(glowColor, 1.0) * intensity;
+        }
+    </script>
