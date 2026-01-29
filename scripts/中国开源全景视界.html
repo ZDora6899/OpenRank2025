@@ -769,3 +769,21 @@
             `;
             chart.appendChild(d);
         });
+        const logContainer = document.getElementById('log-container');
+        const logs = ["Node-882 joined network", "Warning: High latency in SHA", "Repo #992 updated", "User login: admin_bj", "Sync complete: HK-Node", "Firewall block: 192.168.x.x"];
+        setInterval(() => {
+            const p = document.createElement('div');
+            p.innerText = `> ${new Date().toLocaleTimeString()} ${logs[Math.floor(Math.random()*logs.length)]}`;
+            p.style.color = Math.random() > 0.8 ? '#ffaa00' : '#aaa';
+            p.style.marginBottom = '4px';
+            logContainer.prepend(p);
+            if(logContainer.children.length > 8) logContainer.lastChild.remove();
+        }, 1500);
+
+        // Update Clock
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
+
+        init();
+    </script>
+</body>
+</html>
