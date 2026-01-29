@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>全球开源开发者 3D 可视化系统</title>
+    <title>全球开源开发者 3D 可视化系统 - 专业分析版</title>
     <style>
         :root {
             --primary-color: #00f3ff;
-            --glass-bg: rgba(20, 30, 40, 0.6);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --secondary-color: #ff0055;
+            --growth-color: #00ff88;
+            --glass-bg: rgba(15, 23, 35, 0.75);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.15);
             --text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+            --panel-padding: 20px;
         }
 
         body {
             margin: 0;
             overflow: hidden;
             background-color: #050510;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
             color: #eee;
         }
 
@@ -27,16 +30,21 @@
             background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
         }
 
-        /* 通用玻璃拟态面板样式 */
+        /* 滚动条样式 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-color); }
+
+        /* 面板基础 */
         .glass-panel {
             background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: var(--glass-border);
-            border-radius: 8px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            transition: all 0.3s ease;
-            /* 确保面板内的鼠标事件正常处理 */
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
             pointer-events: auto; 
         }
 
@@ -52,855 +60,212 @@
 
         h1 {
             margin: 0;
-            font-size: 24px;
-            letter-spacing: 2px;
+            font-size: 28px;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            color: var(--primary-color);
-            text-shadow: var(--text-shadow);
+            background: linear-gradient(90deg, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
         }
 
-        .subtitle {
-            font-size: 12px;
+        /* 视图切换器 */
+        .view-switcher {
+            display: inline-flex;
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            padding: 4px;
+            margin-top: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: auto;
+        }
+
+        .view-btn {
+            background: transparent;
+            border: none;
             color: #aaa;
-            margin-top: 5px;
+            padding: 6px 16px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: 0.3s;
         }
 
-        #tooltip {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.85);
-            color: var(--primary-color);
-            padding: 12px;
-            border-radius: 4px;
-            font-size: 14px;
-            pointer-events: none;
-            z-index: 100;
-            display: none;
-            border: 1px solid var(--primary-color);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
-            white-space: nowrap;
+        .view-btn.active {
+            background: var(--primary-color);
+            color: #000;
+            box-shadow: 0 0 10px var(--primary-color);
         }
 
+        /* 左侧面板 */
         #leftPanel {
             position: absolute;
-            top: 80px;
-            left: 20px;
-            width: 280px;
+            top: 100px;
+            left: 30px;
+            width: 260px;
             z-index: 100;
-            padding: 20px;
+            padding: var(--panel-padding);
         }
 
-        #rightPanel {
+        /* 左下角面板 */
+        #bottomLeftPanel {
             position: absolute;
-            top: 80px;
-            right: 20px;
-            width: 240px;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            bottom: 30px;
+            left: 30px;
+            width: 300px;
+            z-index: 90;
+            padding: 15px;
         }
 
-        /* 搜索框样式 */
-        .search-box {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
+        .search-box { position: relative; margin-bottom: 20px; }
         .search-box input {
             width: 100%;
             padding: 12px 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
             color: white;
             box-sizing: border-box;
             outline: none;
             transition: 0.3s;
         }
-
-        .search-box input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        .search-box input:focus { border-color: var(--primary-color); }
+        
+        .panel-section { margin-bottom: 20px; }
+        .panel-title { 
+            font-size: 14px; color: #8899a6; text-transform: uppercase; letter-spacing: 1px; 
+            margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;
         }
 
-        .search-btn {
+        /* 数据表格样式 */
+        .data-table {
             width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background: linear-gradient(45deg, #0077ff, #00f3ff);
-            border: none;
-            border-radius: 4px;
-            color: #000;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: 0.3s;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 5px;
         }
-
-        .search-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 243, 255, 0.3);
-        }
-
-        /* 统计数据样式 */
-        h3 {
-            margin: 0 0 15px 0;
-            color: #fff;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        .data-table th {
+            text-align: left;
+            color: #667788;
+            font-weight: 600;
             padding-bottom: 8px;
-            font-size: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 13px;
+        .data-table td {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #ddd;
         }
-
-        .stat-label { color: #8899a6; }
-        .stat-value { 
-            color: var(--primary-color); 
-            font-weight: bold; 
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table .num {
+            text-align: right;
             font-family: 'Courier New', monospace;
-        }
-
-        /* 排行榜 */
-        .rank-item {
-            display: flex;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 13px;
-            transition: 0.2s;
-            cursor: pointer; /* 增加手指光标提示可点击 */
-        }
-
-        .rank-item:hover {
-            background: rgba(255,255,255,0.05);
-            padding-left: 5px;
-        }
-
-        .rank-num {
-            width: 24px;
-            color: #666;
             font-weight: bold;
+        }
+        .trend-up { color: var(--growth-color); }
+        .trend-neutral { color: #aaa; }
+
+        /* 右侧面板 (分析仪表盘) */
+        #rightPanel {
+            position: absolute;
+            top: 100px;
+            right: 30px;
+            width: 320px;
+            max-height: calc(100vh - 140px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            transform: translateX(360px); /* 默认隐藏 */
+            opacity: 0;
+        }
+
+        #rightPanel.active {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        /* 排行榜面板 (默认显示) */
+        #rankPanel {
+            position: absolute;
+            top: 100px;
+            right: 30px;
+            width: 260px;
+            z-index: 90;
+            padding: 15px;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+
+        #rankPanel.hidden {
+            transform: translateX(300px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 统计数字 */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-card { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; text-align: center; }
+        .stat-card .val { font-size: 18px; color: #fff; font-weight: bold; display: block; }
+        .stat-card .lbl { font-size: 10px; color: #888; }
+
+        /* SVG 图表样式 */
+        .chart-container {
+            width: 100%;
+            height: 120px;
+            margin: 10px 0;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            position: relative;
         }
         
+        svg { width: 100%; height: 100%; overflow: visible; }
+        .line-path { fill: none; stroke: var(--primary-color); stroke-width: 2; vector-effect: non-scaling-stroke; }
+        .area-path { fill: rgba(0, 243, 255, 0.1); stroke: none; }
+        .grid-line { stroke: rgba(255,255,255,0.05); stroke-width: 1; }
+        
+        /* 技能条 */
+        .skill-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
+        .skill-name { width: 60px; color: #aaa; }
+        .skill-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+        .skill-bar-fill { height: 100%; background: var(--primary-color); border-radius: 3px; width: 0; transition: width 1s ease; }
+
+        /* 雷达图多边形 */
+        .radar-poly { fill: rgba(255, 0, 85, 0.2); stroke: var(--secondary-color); stroke-width: 2; }
+        .radar-bg { fill: none; stroke: rgba(255,255,255,0.1); }
+
+        /* 排行榜列表 */
+        .rank-item {
+            display: flex; align-items: center; padding: 8px 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; transition: 0.2s;
+        }
+        .rank-item:hover { background: rgba(255,255,255,0.1); padding-left: 10px; }
+        .rank-num { width: 24px; color: #666; font-weight: bold; }
         .rank-num.top3 { color: #ffd700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+        .rank-name { flex: 1; font-size: 13px; }
+        .rank-val { color: var(--primary-color); font-family: monospace; }
 
-        .rank-name { flex: 1; }
-        .rank-val { color: #fff; opacity: 0.8; }
-
-        /* 图例 */
-        .legend-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 12px;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 10px;
-            box-shadow: 0 0 5px currentColor;
-        }
-
-        /* 详情面板 */
-        #detailPanel {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* 底部控制提示 */
-        #controls-hint {
+        /* Tooltip */
+        #tooltip {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.4);
-            font-size: 12px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--primary-color);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 13px;
             pointer-events: none;
-            z-index: 10;
+            z-index: 200;
+            display: none;
+            white-space: nowrap;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
         }
+
+        #close-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; opacity: 0.6;
+        }
+        #close-btn:hover { opacity: 1; }
     </style>
 </head>
-
-<body>
-    <div id="container"></div>
-
-    <div id="header">
-        <h1>Global Open Source Visualization</h1>
-        <div class="subtitle">全球开源开发者 3D 分布与协作图谱</div>
-    </div>
-
-    <div id="leftPanel" class="glass-panel">
-        <div class="search-box">
-            <input type="text" id="countrySearch" placeholder="输入国家名称 (如: 中国, USA)..." autocomplete="off">
-            <button class="search-btn" onclick="findCountry()">定位国家 / Locate</button>
-        </div>
-
-        <div id="statsBox">
-            <h3>实时数据概览 / Overview</h3>
-            <div class="stat-row">
-                <span class="stat-label">Total Developers</span>
-                <span class="stat-value">20,295,300+</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Coverage</span>
-                <span class="stat-value">242 Regions</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">YoY Growth</span>
-                <span class="stat-value" style="color:#44ff44">▲ 12.3%</span>
-            </div>
-        </div>
-
-        <div id="detailPanel">
-            <h3 style="color: var(--primary-color)">选定区域详情</h3>
-            <div class="stat-row"><span class="stat-label">Country</span><span class="stat-value" id="d-name">-</span></div>
-            <div class="stat-row"><span class="stat-label">Continent</span><span class="stat-value" id="d-continent">-</span></div>
-            <div class="stat-row"><span class="stat-label">Dev Count</span><span class="stat-value" id="d-count">-</span></div>
-            <div class="stat-row"><span class="stat-label">Global Rank</span><span class="stat-value" id="d-rank">-</span></div>
-        </div>
-    </div>
-
-    <div id="rightPanel">
-        <div class="glass-panel" style="padding: 15px;">
-            <h3>Top 10 Hubs</h3>
-            <div id="rankingList">
-                <!-- JS will populate this -->
-            </div>
-        </div>
-
-        <div class="glass-panel" style="padding: 15px;">
-            <h3>Region Legend</h3>
-            <div id="legendList">
-                <!-- JS will populate this -->
-            </div>
-        </div>
-    </div>
-
-    <div id="tooltip"></div>
-    <div id="controls-hint">🖱️ 左键拖动旋转 · 滚轮缩放 · 右键平移</div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
-    <!-- 大气层 Shader 代码 (Vertex & Fragment) -->
-    <script id="vertexShader" type="x-shader/x-vertex">
-        varying vec3 vNormal;
-        void main() {
-            vNormal = normalize(normalMatrix * normal);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    </script>
-    <script id="fragmentShader" type="x-shader/x-fragment">
-        varying vec3 vNormal;
-        void main() {
-            float intensity = pow(0.6 - dot(vNormal, vec3(0, 0, 1.0)), 4.0);
-            gl_FragColor = vec4(0.0, 0.6, 1.0, 1.0) * intensity;
-        }
-    </script>
-    <script>
-        // --- 核心配置 ---
-        const config = {
-            colors: {
-                Asia: 0xff3333,
-                NorthAmerica: 0x3388ff,
-                Europe: 0x33ff33,
-                SouthAmerica: 0xffaa00,
-                Africa: 0xcc33ff,
-                Oceania: 0x00ffff,
-                Arctic: 0xffffff
-            },
-            colorMap: {
-                '亚洲': 'Asia', '北美洲': 'NorthAmerica', '欧洲': 'Europe', 
-                '南美洲': 'SouthAmerica', '非洲': 'Africa', '大洋洲': 'Oceania', '北极': 'Arctic'
-            }
-        };
-
-        // --- 数据集 (保留原有数据结构) ---
-        const rawData = [
-             { country: '中国', count: 198.29, capital: { lat: 39.9042, lon: 116.4074 }, continent: '亚洲' },
-             { country: '日本', count: 36.79, capital: { lat: 35.6895, lon: 139.6917 }, continent: '亚洲' },
-             { country: '美国', count: 476.16, capital: { lat: 38.9072, lon: -77.0369 }, continent: '北美洲' },
-             { country: '印度', count: 239.98, capital: { lat: 28.6139, lon: 77.2090 }, continent: '亚洲' },
-             { country: '英国', count: 98.3, capital: { lat: 51.5074, lon: -0.1278 }, continent: '欧洲' },
-             { country: '德国', count: 95.00, capital: { lat: 52.5200, lon: 13.4050 }, continent: '欧洲' },
-             { country: '巴西', count: 80.00, capital: { lat: -15.8267, lon: -47.9218 }, continent: '南美洲' },
-             { country: '加拿大', count: 79.69, capital: { lat: 45.4215, lon: -75.6972 }, continent: '北美洲' },
-             { country: '法国', count: 68.88, capital: { lat: 48.8566, lon: 2.3522 }, continent: '欧洲' },
-             { country: '俄罗斯', count: 57.14, capital: { lat: 55.7558, lon: 37.6173 }, continent: '欧洲' },
-             { country: '澳大利亚', count: 38.03, capital: { lat: -35.2809, lon: 149.1300 }, continent: '大洋洲' },
-             { country: '印度尼西亚', count: 36.64, capital: { lat: -6.2088, lon: 106.8456 }, continent: '亚洲' },
-             { country: '西班牙', count: 36.52, capital: { lat: 40.4168, lon: -3.7038 }, continent: '欧洲' },
-             { country: '乌克兰', count: 32.48, capital: { lat: 50.4501, lon: 30.5234 }, continent: '欧洲' },
-             { country: '意大利', count: 27.23, capital: { lat: 41.9028, lon: 12.4964 }, continent: '欧洲' },
-             { country: '阿根廷', count: 25.71, capital: { lat: -34.6118, lon: -58.3960 }, continent: '南美洲' },
-             { country: '瑞典', count: 24.05, capital: { lat: 59.3293, lon: 18.0686 }, continent: '欧洲' },
-             { country: '墨西哥', count: 22.23, capital: { lat: 19.4326, lon: -99.1332 }, continent: '北美洲' },
-             { country: '越南', count: 21.5, capital: { lat: 21.0278, lon: 105.8342 }, continent: '亚洲' },
-             { country: '巴基斯坦', count: 18.89, capital: { lat: 33.6844, lon: 73.0479 }, continent: '亚洲' },
-             { country: '哥伦比亚', count: 18.35, capital: { lat: 4.7110, lon: -74.0721 }, continent: '南美洲' },
-             { country: '瑞士', count: 18.11, capital: { lat: 46.9480, lon: 7.4474 }, continent: '欧洲' },
-             { country: '尼日利亚', count: 17.69, capital: { lat: 9.0820, lon: 8.6753 }, continent: '非洲' },
-             { country: '葡萄牙', count: 14.69, capital: { lat: 38.7223, lon: -9.1393 }, continent: '欧洲' },
-             { country: '荷兰', count: 30.00, capital: { lat: 52.3676, lon: 4.9041 }, continent: '欧洲' }, // 补一个荷兰
-             { country: '南非', count: 10.5, capital: { lat: -25.7479, lon: 28.2293 }, continent: '非洲' },
-             { country: '埃及', count: 11.86, capital: { lat: 30.0444, lon: 31.2357 }, continent: '非洲' },
-             { country: '新加坡', count: 15.00, capital: { lat: 1.3521, lon: 103.8198 }, continent: '亚洲' },
-             { country: '韩国', count: 28.00, capital: { lat: 37.5665, lon: 126.9780 }, continent: '亚洲' }
-             // ... 为了演示效果，数据量已足够生成酷炫效果，不再列出所有微小国家
-        ];
-        // 数据预处理
-        rawData.sort((a, b) => b.count - a.count);
-        rawData.forEach((item, index) => {
-            item.rank = index + 1;
-            item.rawCount = item.count + '万';
-            item.colorKey = config.colorMap[item.continent];
-        });
-
-        // --- Three.js 初始化 ---
-        const scene = new THREE.Scene();
-        // 增加雾化效果，增强景深
-        scene.fog = new THREE.FogExp2(0x050510, 0.002);
-
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 3.5; // 初始拉远一点
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 性能优化
-        document.getElementById('container').appendChild(renderer.domElement);
-        // --- 核心对象组 ---
-        // 我们将所有依附于地球的物体放入一个 Group，这样旋转 Group 即可带动所有物体
-        const earthGroup = new THREE.Group();
-        scene.add(earthGroup);
-
-        // --- 1. 创建星空背景 (粒子系统) ---
-        function createStars() {
-            const geometry = new THREE.BufferGeometry();
-            const count = 3000;
-            const positions = new Float32Array(count * 3);
-            const colors = new Float32Array(count * 3);
-
-            for (let i = 0; i < count; i++) {
-                const r = 400 + Math.random() * 400; // 距离中心 400-800
-                const theta = 2 * Math.PI * Math.random();
-                const phi = Math.acos(2 * Math.random() - 1);
-                
-                positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-                positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-                positions[i * 3 + 2] = r * Math.cos(phi);
-
-                // 星星颜色随机微调
-                const colorType = Math.random();
-                if(colorType > 0.9) { colors[i*3]=1; colors[i*3+1]=0.8; colors[i*3+2]=0.8; } // 红巨星
-                else if(colorType > 0.7) { colors[i*3]=0.8; colors[i*3+1]=0.8; colors[i*3+2]=1; } // 蓝巨星
-                else { colors[i*3]=1; colors[i*3+1]=1; colors[i*3+2]=1; } // 白星
-            }
-
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-            const material = new THREE.PointsMaterial({
-                size: 1.5,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.8,
-                sizeAttenuation: true
-            });
-
-            const starField = new THREE.Points(geometry, material);
-            scene.add(starField);
-            return starField;
-        }
-        const stars = createStars();
-
-        // --- 2. 创建地球本体 ---
-        const textureLoader = new THREE.TextureLoader();
-        // 使用更高清或色彩更深的贴图 URL 模拟科技感
-        const earthGeo = new THREE.SphereGeometry(1, 64, 64);
-        const earthMat = new THREE.MeshPhongMaterial({
-            map: textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
-            specularMap: textureLoader.load('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg'),
-            normalMap: textureLoader.load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg'),
-            normalScale: new THREE.Vector2(0.85, 0.85),
-            specular: new THREE.Color(0x333333),
-            shininess: 15
-        });
-        const earth = new THREE.Mesh(earthGeo, earthMat);
-        earthGroup.add(earth);
-
-        // --- 3. 创建大气层光晕 (Shader) ---
-        const atmosGeo = new THREE.SphereGeometry(1.2, 64, 64); // 稍大一点
-        const atmosMat = new THREE.ShaderMaterial({
-            vertexShader: document.getElementById('vertexShader').textContent,
-            fragmentShader: document.getElementById('fragmentShader').textContent,
-            blending: THREE.AdditiveBlending,
-            side: THREE.BackSide,
-            transparent: true
-        });
-        const atmosphere = new THREE.Mesh(atmosGeo, atmosMat);
-        scene.add(atmosphere); // 大气层不随地球转动，而是永远面向摄像机边缘
-
-        // --- 4. 创建云层 ---
-        const cloudGeo = new THREE.SphereGeometry(1.01, 64, 64);
-        const cloudMat = new THREE.MeshPhongMaterial({
-            map: textureLoader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png'),
-            transparent: true,
-            opacity: 0.6,
-            blending: THREE.AdditiveBlending,
-            side: THREE.DoubleSide
-        });
-        const clouds = new THREE.Mesh(cloudGeo, cloudMat);
-        earthGroup.add(clouds);
-
-        // --- 5. 数据可视化 (发光柱体 + 动态效果) ---
-        const bars = [];
-        const hitTargets = []; // 用于射线检测的交互对象列表
-        const maxData = rawData[0].count; // 最大值用于归一化
-
-        // 经纬度转 Vector3 (修正版)
-        function latLonToVector3(lat, lon, radius) {
-            const phi = (90 - lat) * (Math.PI / 180);
-            const theta = (lon + 90) * (Math.PI / 180); // 修正：调整经度偏移量以对齐纹理 (lon + 90)
-
-            // 标准 SphereGeometry 的 UV 映射下，需要反转 X 轴或调整 theta
-            // 经过修正的公式，确保 Lon 0 对应 Z 轴正向 (Greenwich)
-            const x = -(radius * Math.sin(phi) * Math.cos(theta));
-            const z = (radius * Math.sin(phi) * Math.sin(theta));
-            const y = (radius * Math.cos(phi));
-            
-            return new THREE.Vector3(x, y, z);
-        }
-
-        // 创建柱体
-        rawData.forEach(data => {
-            const height = (data.count / maxData) * 0.5 + 0.05; // 高度映射
-            const colorHex = config.colors[data.colorKey] || 0xffffff;
-            
-            // --- 新增：底部标记点 (Base Dot) ---
-            // 这可以帮助用户定位，即使柱体缩短时也能看到位置
-            // 增大半径至 0.025 以更方便点击
-            const baseGeometry = new THREE.CircleGeometry(0.025, 16);
-            const baseMaterial = new THREE.MeshBasicMaterial({
-                color: colorHex,
-                transparent: true,
-                opacity: 0.6,
-                side: THREE.DoubleSide
-            });
-            const baseDot = new THREE.Mesh(baseGeometry, baseMaterial);
-            // 稍微高出地球表面一点点 (1.002) 防止 Z-fighting闪烁
-            const basePos = latLonToVector3(data.capital.lat, data.capital.lon, 1.002);
-            baseDot.position.copy(basePos);
-            baseDot.lookAt(new THREE.Vector3(0,0,0));
-            
-            // 为 Dot 添加 userData，以便交互
-            baseDot.userData = { 
-                info: data, 
-                isDot: true 
-            };
-            
-            earthGroup.add(baseDot);
-            
-            // --- 柱体 ---
-            // 加粗至 0.03 方便鼠标交互
-            const geometry = new THREE.BoxGeometry(0.03, 0.03, height); // 初始 lying down on Z
-            geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0, height / 2)); // 调整锚点到底部
-
-            // 发光材质
-            const material = new THREE.MeshPhongMaterial({
-                color: colorHex,
-                emissive: colorHex,
-                emissiveIntensity: 0.6,
-                transparent: true,
-                opacity: 0.9
-            });
-
-            const bar = new THREE.Mesh(geometry, material);
-            const pos = latLonToVector3(data.capital.lat, data.capital.lon, 1);
-            
-            bar.position.copy(pos);
-            bar.lookAt(new THREE.Vector3(0,0,0)); // 指向圆心
-            
-            // 存入自定义属性用于动画
-            bar.userData = {
-                originalScaleZ: 1,
-                hoverScaleZ: 1,
-                info: data,
-                randomPhase: Math.random() * Math.PI * 2 // 随机相位用于呼吸效果
-            };
-            
-            // 关键：将 Bar 链接到 Dot，这样悬停 Dot 时可以找到对应的 Bar 进行动画
-            baseDot.userData.linkedBar = bar;
-
-            earthGroup.add(bar);
-            bars.push(bar);
-            
-            // 将 Bar 和 Dot 都加入射线检测列表
-            hitTargets.push(bar);
-            hitTargets.push(baseDot);
-        });
-
-        // --- 6. 连接线 (Bezier Curves) ---
-        // 选取 Top 10 国家，随机连接生成网络
-        const lineMaterial = new THREE.LineBasicMaterial({
-            color: 0x00f3ff,
-            transparent: true,
-            opacity: 0.3,
-            blending: THREE.AdditiveBlending
-        });
-
-        const topCountries = rawData.slice(0, 15);
-        for(let i=0; i<topCountries.length; i++) {
-            for(let j=i+1; j<topCountries.length; j++) {
-                if(Math.random() > 0.7) { // 30% 概率连接，避免太乱
-                    const p1 = latLonToVector3(topCountries[i].capital.lat, topCountries[i].capital.lon, 1);
-                    const p2 = latLonToVector3(topCountries[j].capital.lat, topCountries[j].capital.lon, 1);
-                    
-                    // 计算控制点 (拉高曲线)
-                    const dist = p1.distanceTo(p2);
-                    const mid = p1.clone().add(p2).multiplyScalar(0.5).normalize().multiplyScalar(1 + dist * 0.5);
-                    
-                    const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
-                    const points = curve.getPoints(50);
-                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                    
-                    const line = new THREE.Line(geometry, lineMaterial);
-                    earthGroup.add(line);
-                    
-                    // 添加飞行的光点粒子
-                    // (为了代码简洁，这里暂不添加复杂的流光粒子，仅展示静态弧线网络)
-                }
-            }
-        }
-
-        // --- 灯光系统 ---
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // 较暗的环境光
-        scene.add(ambientLight);
-
-        const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        sunLight.position.set(5, 3, 5);
-        scene.add(sunLight);
-
-        const rimLight = new THREE.DirectionalLight(0x4455ff, 0.5); // 蓝色背光
-        rimLight.position.set(-5, 0, -5);
-        scene.add(rimLight);
-
-        // --- 交互控制 (鼠标拖拽 + 惯性 + 滚轮) ---
-        let targetRotationX = 0;
-        let targetRotationY = 0;
-        let targetRotationXOnMouseDown = 0;
-        let targetRotationYOnMouseDown = 0;
-        let mouseX = 0, mouseY = 0;
-        let mouseXOnMouseDown = 0, mouseYOnMouseDown = 0;
-        let windowHalfX = window.innerWidth / 2;
-        let windowHalfY = window.innerHeight / 2;
-        let isDragging = false;
-        
-        // 目标位置的缓存（用于自动旋转逻辑）
-        let autoRotate = true;
-
-        document.addEventListener('mousedown', onDocumentMouseDown, false);
-        document.addEventListener('touchstart', onDocumentTouchStart, {passive: false});
-        document.addEventListener('wheel', onDocumentMouseWheel, {passive: false});
-        // 右键处理
-        document.addEventListener('contextmenu', event => event.preventDefault());
-
-        function onDocumentMouseDown(event) {
-            // 修复：如果点击的是UI面板内部的元素（如输入框、按钮或面板背景），则不执行Canvas拖拽逻辑
-            if (event.target.closest('.glass-panel') || event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON') {
-                return;
-            }
-
-            event.preventDefault();
-            document.addEventListener('mousemove', onDocumentMouseMove, false);
-            document.addEventListener('mouseup', onDocumentMouseUp, false);
-            document.addEventListener('mouseout', onDocumentMouseUp, false);
-
-            mouseXOnMouseDown = event.clientX - windowHalfX;
-            mouseYOnMouseDown = event.clientY - windowHalfY;
-            targetRotationYOnMouseDown = targetRotationY;
-            targetRotationXOnMouseDown = targetRotationX;
-            isDragging = true;
-            autoRotate = false; // 用户交互时停止自动旋转
-        }
-
-        function onDocumentMouseMove(event) {
-            mouseX = event.clientX - windowHalfX;
-            mouseY = event.clientY - windowHalfY;
-            // 简单的比例映射
-            targetRotationY = targetRotationYOnMouseDown + (mouseX - mouseXOnMouseDown) * 0.005;
-            targetRotationX = targetRotationXOnMouseDown + (mouseY - mouseYOnMouseDown) * 0.005;
-        }
-
-        function onDocumentMouseUp(event) {
-            document.removeEventListener('mousemove', onDocumentMouseMove, false);
-            document.removeEventListener('mouseup', onDocumentMouseUp, false);
-            document.removeEventListener('mouseout', onDocumentMouseUp, false);
-            isDragging = false;
-            // 松开后不立即恢复自动旋转，留给用户观察
-            setTimeout(() => { if(!isDragging) autoRotate = true; }, 5000);
-        }
-
-        function onDocumentTouchStart(event) {
-            if (event.touches.length === 1) {
-                // 修复：触摸UI时不旋转地球
-                if (event.target.closest('.glass-panel') || event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON') {
-                    return;
-                }
-                event.preventDefault();
-                mouseXOnMouseDown = event.touches[0].pageX - windowHalfX;
-                targetRotationYOnMouseDown = targetRotationY;
-                targetRotationXOnMouseDown = targetRotationX; // Initialize X too
-                // 这里简化Touch逻辑，仅处理单指旋转
-                // 需要完善Touch Move...
-            }
-        }
-
-        function onDocumentMouseWheel(event) {
-            // 如果滚轮在面板上，允许默认滚动（虽然目前面板内容不多，但这是好习惯）
-            if (event.target.closest('.glass-panel')) {
-                return;
-            }
-            event.preventDefault();
-            const fov = camera.fov + event.deltaY * 0.05;
-            camera.fov = THREE.MathUtils.clamp(fov, 20, 75); // 限制缩放范围
-            camera.updateProjectionMatrix();
-        }
-
-        // --- 鼠标悬停检测 (Raycaster) ---
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        let intersectedBar = null; // 这个变量现在存储“被激活的Bar”，可能是直接悬停的，也可能是通过Dot悬停的
-        let lastMouseX = 0; // 新增：保存鼠标X坐标
-        let lastMouseY = 0; // 新增：保存鼠标Y坐标
-
-        window.addEventListener('mousemove', (event) => {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            lastMouseX = event.clientX; // 更新全局鼠标坐标
-            lastMouseY = event.clientY; // 更新全局鼠标坐标
-        });
-        // --- 搜索功能 ---
-        function findCountry() {
-            const val = document.getElementById('countrySearch').value.toLowerCase();
-            const target = bars.find(b => 
-                b.userData.info.country.toLowerCase().includes(val) || 
-                b.userData.info.continent.toLowerCase().includes(val)
-            );
-
-            if (target) {
-                // 1. 停止自动旋转
-                autoRotate = false;
-                
-                // 2. 计算目标旋转角度
-                // 我们需要将地球转到，使得该国家面对相机 (0, 0, Z)
-                // 国家的原始位置向量
-                const pos = target.position.clone();
-                // 转换为球面坐标
-                const spherical = new THREE.Spherical().setFromVector3(pos);
-                
-                // 计算需要的 group 旋转
-                // Spherical phi是从Y轴正向下来的角度，theta是从Z轴正向逆时针的角度
-                // 我们需要将这个点转到相机面前 (theta = 0, phi = PI/2)
-                
-                // 简化的目标旋转计算：
-                targetRotationY = -spherical.theta - Math.PI / 2; 
-                targetRotationX = Math.PI / 2 - spherical.phi;
-
-                // 3. 高亮显示
-                target.userData.hoverScaleZ = 2.0;
-                target.material.emissiveIntensity = 1.0;
-                
-                updateDetailPanel(target.userData.info);
-                
-                // 4. 重置定时器
-                setTimeout(() => { 
-                    target.userData.hoverScaleZ = 1; 
-                    target.material.emissiveIntensity = 0.6;
-                    autoRotate = true;
-                }, 3000);
-            } else {
-                alert("未找到相关区域");
-            }
-        }
-
-        // 监听回车键搜索
-        document.getElementById('countrySearch').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                findCountry();
-            }
-        });
-        // --- UI 数据填充 ---
-        function populateUI() {
-            // 排行榜
-            const rankContainer = document.getElementById('rankingList');
-            rawData.slice(0, 10).forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'rank-item';
-                div.innerHTML = `
-                    <span class="rank-num ${item.rank<=3?'top3':''}">${item.rank}</span>
-                    <span class="rank-name">${item.country}</span>
-                    <span class="rank-val">${item.rawCount}</span>
-                `;
-                // 点击排行榜定位
-                div.onclick = () => {
-                    document.getElementById('countrySearch').value = item.country;
-                    findCountry();
-                };
-                rankContainer.appendChild(div);
-            });
-
-            // 图例
-            const legendContainer = document.getElementById('legendList');
-            const usedContinents = new Set();
-            rawData.forEach(item => usedContinents.add(item.continent));
-            
-            Object.keys(config.colorMap).forEach(zh => {
-                const en = config.colorMap[zh];
-                const color = '#' + config.colors[en].toString(16).padStart(6, '0');
-                const div = document.createElement('div');
-                div.className = 'legend-row';
-                div.innerHTML = `<div class="dot" style="background:${color}; color:${color}"></div><span>${zh} (${en})</span>`;
-                legendContainer.appendChild(div);
-            });
-        }
-        populateUI();
-
-        function updateDetailPanel(data) {
-            document.getElementById('d-name').textContent = data.country;
-            document.getElementById('d-continent').textContent = data.continent;
-            document.getElementById('d-count').textContent = data.rawCount;
-            document.getElementById('d-rank').textContent = '#' + data.rank;
-            document.getElementById('detailPanel').style.display = 'block';
-        }
-
-        // --- 动画循环 ---
-        const clock = new THREE.Clock();
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            const time = clock.getElapsedTime();
-
-            // 1. 惯性旋转逻辑 (Damping)
-            if (autoRotate) {
-                targetRotationY += 0.001; // 自动旋转速度
-            }
-            // 简单的线性插值实现平滑过渡
-            earthGroup.rotation.y += (targetRotationY - earthGroup.rotation.y) * 0.05;
-            earthGroup.rotation.x += (targetRotationX - earthGroup.rotation.x) * 0.05;
-
-            // 2. 云层独立旋转
-            clouds.rotation.y += 0.0002;
-
-            // 3. 柱体呼吸效果 & 鼠标交互
-            // Raycaster 更新
-            raycaster.setFromCamera(mouse, camera);
-            // 修改：现在检测 hitTargets，包含 Bar 和 BaseDot
-            const intersects = raycaster.intersectObjects(hitTargets);
-            
-            // 逻辑更新：处理 Dot 悬停
-            let currentHoverTarget = null;
-            if (intersects.length > 0) {
-                const hit = intersects[0].object;
-                if (hit.userData.isDot) {
-                    currentHoverTarget = hit.userData.linkedBar;
-                } else {
-                    currentHoverTarget = hit;
-                }
-            }
-            
-            // 重置之前的状态 (如果没有悬停，或者悬停了新的对象)
-            if (intersectedBar && intersectedBar !== currentHoverTarget) {
-                 document.getElementById('container').style.cursor = 'auto';
-                 document.getElementById('tooltip').style.display = 'none';
-                 // 恢复默认颜色强度由loop处理
-            }
-            
-            intersectedBar = currentHoverTarget;
-
-            if (intersectedBar) {
-                const info = intersectedBar.userData.info;
-                document.getElementById('container').style.cursor = 'pointer';
-                
-                // Tooltip
-                const tooltip = document.getElementById('tooltip');
-                tooltip.style.left = (lastMouseX + 15) + 'px'; 
-                tooltip.style.top = (lastMouseY + 15) + 'px'; 
-                tooltip.innerHTML = `<strong>${info.country}</strong><br>${info.rawCount} devs`;
-                tooltip.style.display = 'block';
-                
-                // 临时放大
-                // 注意：这里只操作 intersectedBar，即柱体本身
-                intersectedBar.scale.z = THREE.MathUtils.lerp(intersectedBar.scale.z, 5, 0.1); 
-            }
-
-            // 更新所有柱体动画
-            bars.forEach(bar => {
-                // 基础呼吸: scale Z based on sin(time + random)
-                // 如果被高亮(search)，则忽略呼吸
-                let targetScale = 1;
-                
-                if (bar === intersectedBar) {
-                    targetScale = 5; // Hover 高度
-                    bar.material.opacity = 1.0;
-                } else if (bar.userData.hoverScaleZ > 1.5) {
-                    targetScale = bar.userData.hoverScaleZ; // Search 高亮
-                    bar.material.opacity = 1.0;
-                } else {
-                    // 默认呼吸
-                    targetScale = 1 + Math.sin(time * 3 + bar.userData.randomPhase) * 0.2;
-                    bar.material.opacity = 0.8;
-                }
-                
-                bar.scale.z += (targetScale - bar.scale.z) * 0.1;
-            });
-
-            // 4. 星空缓慢移动 (产生视差感)
-            stars.rotation.y = time * 0.02;
-
-            renderer.render(scene, camera);
-        }
-
-        // 入场动画
-        function introAnimation() {
-            const startY = earthGroup.rotation.y;
-            earthGroup.scale.set(0,0,0);
-            
-            // 简单的放大效果
-            let s = 0;
-            const timer = setInterval(() => {
-                s += 0.02;
-                earthGroup.scale.set(s,s,s);
-                if(s >= 1) {
-                    clearInterval(timer);
-                    earthGroup.scale.set(1,1,1);
-                }
-            }, 16);
-        }
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // 启动
-        introAnimation();
-        animate();
-
-    </script>
-</body>
-</html>
