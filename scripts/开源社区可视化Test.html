@@ -257,4 +257,20 @@ const events = [
   'repo-D Star 数突破 10k',
   'repo-E 新贡献者加入'
 ];
+function renderEvents() {
+  const el = document.getElementById('eventList');
+  el.innerHTML = events.map((e,i)=>`<div class="list-item"><span>${e}</span><span class="badge">${i+1}</span></div>`).join('');
+}
+renderEvents();
+
+window.addEventListener('resize', () => {
+  for (let i = 1; i <= 9; i++) {
+    echarts.getInstanceByDom(document.getElementById('chart'+i))?.resize();
+  }
+});
+</script>
+
+</body>
+</html>
+
 
