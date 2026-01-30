@@ -289,6 +289,47 @@ public class UserManager {
     }
 }
 
+public class User {
+    private String username;
+    private String email;
+    private String role;
+    private int failedLoginAttempts; // Counter for failed login attempts
+    private boolean isLocked; // Indicates if the account is locked
+
+    // Constructor
+    public User(String username, String email, String role) {
+        this.username = username;
+        this.email = email;
+        this.role = role;
+        this.failedLoginAttempts = 0;
+        this.isLocked = false;
+    }
+
+    // Getters and Setters
+    public int getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    public void incrementFailedLoginAttempts() {
+        this.failedLoginAttempts++;
+    }
+
+    public boolean isLocked() {
+        return isLocked;
+    }
+
+    public void lockAccount() {
+        this.isLocked = true;
+    }
+
+    public void unlockAccount() {
+        this.isLocked = false;
+        this.failedLoginAttempts = 0;
+    }
+
+    // Other existing methods...
+}
+
 
 
 
