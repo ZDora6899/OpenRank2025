@@ -376,6 +376,17 @@ public class UserActivityLog {
         System.out.println("Activity Log: User: " + user.getUsername() + ", Activity: " + activity + ", Date: " + date);
     }
 }
+public class EmailNotification {
+
+    public static void sendLockNotification(User user) {
+        System.out.println("Sending email to " + user.getEmail() + ": Your account has been locked due to multiple failed login attempts.");
+    }
+
+    public static void sendUnlockNotification(User user) {
+        System.out.println("Sending email to " + user.getEmail() + ": Your account has been unlocked. You can now log in.");
+    }
+}
+
 
 
 
