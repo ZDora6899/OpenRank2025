@@ -438,6 +438,41 @@ public class User {
     }
 }
 
+import java.util.UUID;
+
+public class PasswordResetManager {
+    private Map<String, String> resetTokens; // Map of tokens to emails
+
+    public PasswordResetManager() {
+        resetTokens = new HashMap<>();
+    }
+
+    // Generate a reset token for a user
+    public String generateResetToken(User user) {
+        String token = UUID.randomUUID().toString();
+        resetTokens.put(token, user.getEmail());
+        System.out.println("Reset token generated for user: " + user.getUsername());
+        return token;
+    }
+
+    // Validate the reset token
+    public boolean validateResetToken(String token) {
+        return resetTokens.containsKey(token);
+    }
+
+    // Reset the user's password
+    public void resetPassword(String token, String newPassword) {
+        if (validateResetToken(token)) {
+            String email = resetTokens.get(token);
+            // Retrieve user by email and reset password (simulated here)
+            System.out.println("Password reset successful for user with email: " + email);
+        } else {
+            System.out.println("Invalid reset token.");
+        }
+    }
+}
+
+
 
 
 
