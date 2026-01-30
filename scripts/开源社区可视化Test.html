@@ -208,4 +208,53 @@ baseChart('chart5').setOption({
     ]
   }]
 });
+// 模块6 雷达：地区贡献指数
+baseChart('chart6').setOption({
+  tooltip: {},
+  radar: {
+    indicator: [
+      { name: '北美', max: 100 },
+      { name: '欧洲', max: 100 },
+      { name: '中国', max: 100 },
+      { name: '印度', max: 100 },
+      { name: '其他', max: 100 }
+    ]
+  },
+  series: [{ type: 'radar', data: [{ value: [90, 76, 88, 70, 55] }] }]
+});
+
+// 模块7 仪表盘：PR合并率
+baseChart('chart7').setOption({
+  series: [{
+    type: 'gauge',
+    progress: { show: true },
+    detail: { valueAnimation: true, formatter: '{value}%' },
+    data: [{ value: 72, name: '合并率' }]
+  }]
+});
+
+// 模块8 柱状：发布节奏
+baseChart('chart8').setOption({
+  tooltip: {},
+  xAxis: { type: 'category', data: ['v1','v2','v3','v4','v5'] },
+  yAxis: { type: 'value' },
+  series: [{ type: 'bar', data: [12, 9, 15, 7, 11] }]
+});
+
+// 模块9 横向排行
+baseChart('chart9').setOption({
+  tooltip: {},
+  xAxis: { type: 'value' },
+  yAxis: { type: 'category', data: ['repo-A','repo-B','repo-C','repo-D','repo-E'] },
+  series: [{ type: 'bar', data: [980, 870, 760, 640, 520] }]
+});
+
+// 模块10 动态列表
+const events = [
+  'repo-A 合并PR #231',
+  'repo-C 发布 v2.4.1',
+  'repo-B 新增Issue #553',
+  'repo-D Star 数突破 10k',
+  'repo-E 新贡献者加入'
+];
 
