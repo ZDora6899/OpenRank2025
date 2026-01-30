@@ -217,6 +217,24 @@ public class UserManagerCLI {
     }
 }
 
+import java.util.regex.Pattern;
+
+public class UserValidator {
+
+    // Validate email format
+    public static boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        return pattern.matcher(email).matches();
+    }
+
+    // Validate role (assuming only admin and user are allowed)
+    public static boolean isValidRole(String role) {
+        return role.equalsIgnoreCase("admin") || role.equalsIgnoreCase("user");
+    }
+}
+
+
 
 
 
