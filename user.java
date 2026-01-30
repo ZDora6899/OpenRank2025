@@ -524,6 +524,27 @@ public class UserActivityLog {
         System.out.println("Activity Log: User: " + user.getUsername() + ", Activity: " + activity + ", Date: " + date);
     }
 }
+public class MultiFactorAuthentication {
+
+    // Simulate sending an MFA code to the user via email
+    public static String sendMfaCode(User user) {
+        String mfaCode = UUID.randomUUID().toString().substring(0, 6); // Generate a 6-digit code
+        System.out.println("MFA Code sent to " + user.getEmail() + ": " + mfaCode);
+        return mfaCode;
+    }
+
+    // Validate the entered MFA code
+    public static boolean validateMfaCode(User user, String enteredCode, String correctCode) {
+        if (enteredCode.equals(correctCode)) {
+            System.out.println("MFA validated for user: " + user.getUsername());
+            return true;
+        } else {
+            System.out.println("Invalid MFA code for user: " + user.getUsername());
+            return false;
+        }
+    }
+}
+
 
 
 
