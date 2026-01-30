@@ -269,6 +269,26 @@ public class User {
 
     // Other existing getters and setters...
 }
+public class UserManager {
+    private List<User> users;
+
+    public UserManager() {
+        users = new ArrayList<>();
+    }
+
+    // Other methods...
+
+    public List<User> searchUsers(String searchQuery) {
+        List<User> result = new ArrayList<>();
+        for (User user : users) {
+            if (user.getUsername().contains(searchQuery) || user.getEmail().contains(searchQuery)) {
+                result.add(user);
+            }
+        }
+        return result;
+    }
+}
+
 
 
 
