@@ -544,6 +544,29 @@ public class MultiFactorAuthentication {
         }
     }
 }
+public class LoginHistoryManager {
+    private Map<String, List<String>> userLoginHistory;
+
+    public LoginHistoryManager() {
+        userLoginHistory = new HashMap<>();
+    }
+
+    // Log a user's login attempt
+    public void logLogin(User user, String ipAddress) {
+        String timestamp = new Date().toString();
+        String loginAttempt = "Login attempt at " + timestamp + " from IP: " + ipAddress;
+
+        userLoginHistory.putIfAbsent(user.getEmail(), new ArrayList<>());
+        userLoginHistory.get(user.getEmail()).add(loginAttempt);
+
+        System.out.println("Login history recorded for user: " + user.getUsername());
+    }
+
+    // View login history for a user
+    public List<String> getLoginHistory(User user) {
+        return userLoginHistory.getOrDefault(user.getEmail(), new ArrayList<>());
+    }
+}
 
 
 
