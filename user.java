@@ -386,6 +386,34 @@ public class EmailNotification {
         System.out.println("Sending email to " + user.getEmail() + ": Your account has been unlocked. You can now log in.");
     }
 }
+import java.util.HashMap;
+import java.util.Map;
+
+public class SessionManager {
+    private Map<String, User> activeSessions;
+
+    public SessionManager() {
+        activeSessions = new HashMap<>();
+    }
+
+    // Start a session for a user
+    public void startSession(User user) {
+        activeSessions.put(user.getEmail(), user);
+        System.out.println("Session started for user: " + user.getUsername());
+    }
+
+    // End a session for a user
+    public void endSession(User user) {
+        activeSessions.remove(user.getEmail());
+        System.out.println("Session ended for user: " + user.getUsername());
+    }
+
+    // Check if a user is logged in
+    public boolean isLoggedIn(User user) {
+        return activeSessions.containsKey(user.getEmail());
+    }
+}
+
 
 
 
