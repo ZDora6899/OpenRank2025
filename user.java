@@ -924,6 +924,51 @@ public class ActivityLogCleanup {
         }
     }
 }
+import java.util.HashMap;
+import java.util.Map;
+import java.time.LocalDateTime;
+
+public class AuthenticationRateLimiter {
+
+    private static final int MAX_ATTEMPTS = 5; // Max allowed attempts in the time window
+    private static final int TIME_WINDOW_MINUTES = 10; // Time window in minutes
+
+    private Map<String, Integer> loginAttempts;
+    private Map<String, LocalDateTime> firstAttemptTime;
+
+    public AuthenticationRateLimiter() {
+        loginAttempts = new HashMap<>();
+        firstAttemptTime = new HashMap<>();
+    }
+
+    // Check if the user has exceeded the rate limit for login attempts
+    public boolean isRateLimited(User user) {
+        LocalDateTime firstAttempt = firstAttemptTime.get(user.getEmail());
+        if (firstAttempt == null) {
+            return false; // No attempts made yet
+        }
+
+        long minutesSinceFirstAttempt = ChronoUnit.MINUTES.between(firstAttempt, LocalDateTime.now());
+        if (minutesSinceFirstAttempt <= TIME_WINDOW_MINUTES) {
+            if (loginAttempts.get(user.getEmail()) >= MAX_ATTEMPTS) {
+                System.out.println("Rate limit exceeded for user: " + user.getUsername());
+                return true;
+            }
+        } else {
+            // Reset login attempts if the time window has passed
+            loginAttempts.put(user.getEmail(), 0);
+            firstAttemptTime.put(user.getEmail(), LocalDateTime.now());
+        }
+        return false;
+    }
+
+    // Record a failed login attempt
+    public void recordFailedAttempt(User user) {
+        loginAttempts.put(user.getEmail(), loginAttempts.getOrDefault(user.getEmail(), 0) + 1);
+        firstAttemptTime.putIfAbsent(user.getEmail(), LocalDateTime.now());
+        System.out.println("Failed login attempt recorded for user: " + user.getUsername());
+    }
+}
 
 
 
