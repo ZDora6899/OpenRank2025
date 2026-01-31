@@ -853,7 +853,202 @@ public class UserActivityWithTimestamp {
         System.out.println("User Activity Log: User: " + user.getUsername() + ", Activity: " + activity + ", Timestamp: " + timestamp);
     }
 }
+import java.util.Random;
 
+public class EmailVerification {
+
+    // Generate a random verification code
+    public static String generateVerificationCode() {
+        Random random = new Random();
+        StringBuilder code = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            code.append(random.nextInt(10)); // Append random digits
+        }
+        return code.toString();
+    }
+
+    // Send verification email with the generated code (simulated)
+    public static void sendVerificationEmail(User user, String code) {
+        System.out.println("Sending verification email to: " + user.getEmail());
+        System.out.println("Verification Code: " + code);
+    }
+
+    // Verify the code entered by the user
+    public static boolean verifyCode(String enteredCode, String actualCode) {
+        return enteredCode.equals(actualCode);
+    }
+}
+public class AccountLocking {
+
+    private Map<String, Integer> failedAttempts;
+
+    public AccountLocking() {
+        failedAttempts = new HashMap<>();
+    }
+
+    // Increment failed login attempts
+    public void incrementFailedAttempts(User user) {
+        failedAttempts.put(user.getEmail(), failedAttempts.getOrDefault(user.getEmail(), 0) + 1);
+        System.out.println("Failed attempts for user " + user.getUsername() + ": " + failedAttempts.get(user.getEmail()));
+    }
+
+    // Check if account is locked
+    public boolean isAccountLocked(User user) {
+        return failedAttempts.getOrDefault(user.getEmail(), 0) >= 5;
+    }
+
+    // Lock account after multiple failed attempts
+    public void lockAccount(User user) {
+        if (isAccountLocked(user)) {
+            System.out.println("Account locked for user: " + user.getUsername() + " due to multiple failed attempts.");
+        }
+    }
+}
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
+public class ActivityLogCleanup {
+
+    // Define the expiration period for activity logs (e.g., 30 days)
+    private static final int LOG_EXPIRATION_DAYS = 30;
+
+    // Clean up activity logs older than the defined expiration period
+    public static void cleanupOldLogs(User user, LocalDateTime lastActivityTime) {
+        long daysSinceLastActivity = ChronoUnit.DAYS.between(lastActivityTime, LocalDateTime.now());
+        if (daysSinceLastActivity > LOG_EXPIRATION_DAYS) {
+            System.out.println("Cleaning up old logs for user: " + user.getUsername());
+            // In a real implementation, delete logs from database or storage
+        } else {
+            System.out.println("Activity logs for user " + user.getUsername() + " are still valid.");
+        }
+    }
+}
+import java.util.HashMap;
+import java.util.Map;
+import java.time.LocalDateTime;
+
+public class AuthenticationRateLimiter {
+
+    private static final int MAX_ATTEMPTS = 5; // Max allowed attempts in the time window
+    private static final int TIME_WINDOW_MINUTES = 10; // Time window in minutes
+
+    private Map<String, Integer> loginAttempts;
+    private Map<String, LocalDateTime> firstAttemptTime;
+
+    public AuthenticationRateLimiter() {
+        loginAttempts = new HashMap<>();
+        firstAttemptTime = new HashMap<>();
+    }
+
+    // Check if the user has exceeded the rate limit for login attempts
+    public boolean isRateLimited(User user) {
+        LocalDateTime firstAttempt = firstAttemptTime.get(user.getEmail());
+        if (firstAttempt == null) {
+            return false; // No attempts made yet
+        }
+
+        long minutesSinceFirstAttempt = ChronoUnit.MINUTES.between(firstAttempt, LocalDateTime.now());
+        if (minutesSinceFirstAttempt <= TIME_WINDOW_MINUTES) {
+            if (loginAttempts.get(user.getEmail()) >= MAX_ATTEMPTS) {
+                System.out.println("Rate limit exceeded for user: " + user.getUsername());
+                return true;
+            }
+        } else {
+            // Reset login attempts if the time window has passed
+            loginAttempts.put(user.getEmail(), 0);
+            firstAttemptTime.put(user.getEmail(), LocalDateTime.now());
+        }
+        return false;
+    }
+
+    // Record a failed login attempt
+    public void recordFailedAttempt(User user) {
+        loginAttempts.put(user.getEmail(), loginAttempts.getOrDefault(user.getEmail(), 0) + 1);
+        firstAttemptTime.putIfAbsent(user.getEmail(), LocalDateTime.now());
+        System.out.println("Failed login attempt recorded for user: " + user.getUsername());
+    }
+}
+import java.util.HashMap;
+import java.util.Map;
+import java.time.LocalDateTime;
+
+public class AuthenticationRateLimiter {
+
+    private static final int MAX_ATTEMPTS = 5; // Max allowed attempts in the time window
+    private static final int TIME_WINDOW_MINUTES = 10; // Time window in minutes
+
+    private Map<String, Integer> loginAttempts;
+    private Map<String, LocalDateTime> firstAttemptTime;
+
+    public AuthenticationRateLimiter() {
+        loginAttempts = new HashMap<>();
+        firstAttemptTime = new HashMap<>();
+    }
+
+    // Check if the user has exceeded the rate limit for login attempts
+    public boolean isRateLimited(User user) {
+        LocalDateTime firstAttempt = firstAttemptTime.get(user.getEmail());
+        if (firstAttempt == null) {
+            return false; // No attempts made yet
+        }
+
+        long minutesSinceFirstAttempt = ChronoUnit.MINUTES.between(firstAttempt, LocalDateTime.now());
+        if (minutesSinceFirstAttempt <= TIME_WINDOW_MINUTES) {
+            if (loginAttempts.get(user.getEmail()) >= MAX_ATTEMPTS) {
+                System.out.println("Rate limit exceeded for user: " + user.getUsername());
+                return true;
+            }
+        } else {
+            // Reset login attempts if the time window has passed
+            loginAttempts.put(user.getEmail(), 0);
+            firstAttemptTime.put(user.getEmail(), LocalDateTime.now());
+        }
+        return false;
+    }
+
+    // Record a failed login attempt
+    public void recordFailedAttempt(User user) {
+        loginAttempts.put(user.getEmail(), loginAttempts.getOrDefault(user.getEmail(), 0) + 1);
+        firstAttemptTime.putIfAbsent(user.getEmail(), LocalDateTime.now());
+        System.out.println("Failed login attempt recorded for user: " + user.getUsername());
+    }
+}
+import java.util.HashMap;
+import java.util.Map;
+
+public class UserSessionManager {
+
+    private Map<String, String> activeSessions; // Maps user email to session ID
+
+    public UserSessionManager() {
+        activeSessions = new HashMap<>();
+    }
+
+    // Create a new session when the user logs in
+    public String createSession(User user) {
+        String sessionId = generateSessionId();
+        activeSessions.put(user.getEmail(), sessionId);
+        System.out.println("Session created for user: " + user.getUsername() + " | Session ID: " + sessionId);
+        return sessionId;
+    }
+
+    // Invalidate session when the user logs out
+    public void invalidateSession(User user) {
+        activeSessions.remove(user.getEmail());
+        System.out.println("Session invalidated for user: " + user.getUsername());
+    }
+
+    // Check if the user has an active session
+    public boolean isSessionActive(User user) {
+        return activeSessions.containsKey(user.getEmail());
+    }
+
+    // Generate a unique session ID (simulated)
+    private String generateSessionId() {
+        return Long.toHexString(System.currentTimeMillis());
+    }
+}
 
 
 
