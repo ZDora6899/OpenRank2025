@@ -878,6 +878,32 @@ public class EmailVerification {
         return enteredCode.equals(actualCode);
     }
 }
+public class AccountLocking {
+
+    private Map<String, Integer> failedAttempts;
+
+    public AccountLocking() {
+        failedAttempts = new HashMap<>();
+    }
+
+    // Increment failed login attempts
+    public void incrementFailedAttempts(User user) {
+        failedAttempts.put(user.getEmail(), failedAttempts.getOrDefault(user.getEmail(), 0) + 1);
+        System.out.println("Failed attempts for user " + user.getUsername() + ": " + failedAttempts.get(user.getEmail()));
+    }
+
+    // Check if account is locked
+    public boolean isAccountLocked(User user) {
+        return failedAttempts.getOrDefault(user.getEmail(), 0) >= 5;
+    }
+
+    // Lock account after multiple failed attempts
+    public void lockAccount(User user) {
+        if (isAccountLocked(user)) {
+            System.out.println("Account locked for user: " + user.getUsername() + " due to multiple failed attempts.");
+        }
+    }
+}
 
 
 
