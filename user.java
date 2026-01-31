@@ -878,6 +878,21 @@ public class EmailVerification {
         return enteredCode.equals(actualCode);
     }
 }
+public class PasswordReset {
+
+    // Send password reset request email (simulated)
+    public static void sendPasswordResetRequest(User user) {
+        String resetLink = "https://example.com/reset-password?user=" + user.getUsername();
+        System.out.println("Password reset link sent to: " + user.getEmail());
+        System.out.println("Reset Link: " + resetLink);
+    }
+
+    // Validate password reset token (simple simulation)
+    public static boolean validateResetToken(String token) {
+        // In a real implementation, the token would be validated against a database or other secure storage
+        return token.equals("valid-token");
+    }
+}
 
 
 
