@@ -905,6 +905,25 @@ public class AccountLocking {
     }
 }
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
+public class ActivityLogCleanup {
+
+    // Define the expiration period for activity logs (e.g., 30 days)
+    private static final int LOG_EXPIRATION_DAYS = 30;
+
+    // Clean up activity logs older than the defined expiration period
+    public static void cleanupOldLogs(User user, LocalDateTime lastActivityTime) {
+        long daysSinceLastActivity = ChronoUnit.DAYS.between(lastActivityTime, LocalDateTime.now());
+        if (daysSinceLastActivity > LOG_EXPIRATION_DAYS) {
+            System.out.println("Cleaning up old logs for user: " + user.getUsername());
+            // In a real implementation, delete logs from database or storage
+        } else {
+            System.out.println("Activity logs for user " + user.getUsername() + " are still valid.");
+        }
+    }
+}
 
 
 
