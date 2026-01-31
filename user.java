@@ -622,6 +622,41 @@ public class RoleManager {
         System.out.println("Role changed to " + newRole + " for user: " + user.getUsername());
     }
 }
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class UserDataBackup {
+
+    // Backup user data to a file
+    public void backupUserData(User user) {
+        try {
+            String userData = "User Data: " + user.getUsername() + ", " + user.getEmail() + ", " + user.getRole();
+            Path backupPath = Path.of("backups", user.getUsername() + "_backup.txt");
+            Files.createDirectories(backupPath.getParent());
+            Files.writeString(backupPath, userData);
+            System.out.println("Backup successful for user: " + user.getUsername());
+        } catch (IOException e) {
+            System.out.println("Error while backing up user data: " + e.getMessage());
+        }
+    }
+
+    // Restore user data from a backup file
+    public void restoreUserData(User user) {
+        Path backupPath = Path.of("backups", user.getUsername() + "_backup.txt");
+        try {
+            if (Files.exists(backupPath)) {
+                String restoredData = Files.readString(backupPath);
+                System.out.println("User data restored for: " + user.getUsername() + " | " + restoredData);
+            } else {
+                System.out.println("No backup found for user: " + user.getUsername());
+            }
+        } catch (IOException e) {
+            System.out.println("Error while restoring user data: " + e.getMessage());
+        }
+    }
+}
 
 
 
