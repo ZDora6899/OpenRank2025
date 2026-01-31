@@ -287,3 +287,29 @@
             <button class="view-btn" onclick="switchView('growth')">📈 增长视图 / Growth</button>
         </div>
     </div>
+    <!-- 左侧：搜索与全局概览 -->
+    <div id="leftPanel" class="glass-panel">
+        <div class="search-box">
+            <input type="text" id="countrySearch" placeholder="🔍 Search Country..." autocomplete="off">
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-title">Overview</div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <span class="val">242</span>
+                    <span class="lbl">Regions</span>
+                </div>
+                <div class="stat-card">
+                    <span class="val" style="color:var(--growth-color)">+12.8%</span>
+                    <span class="lbl">YoY Growth</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="panel-title">Color Legend</div>
+            <!-- JS 动态填充颜色图例 -->
+            <div id="legendList" style="font-size: 12px; line-height: 1.8;"></div>
+        </div>
+    </div>
