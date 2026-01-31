@@ -753,6 +753,26 @@ public class UserActivityReport {
         }
     }
 }
+public class TwoFactorAuthentication {
+
+    // Send 2FA code to user's email
+    public static String send2FACode(User user) {
+        String code = UUID.randomUUID().toString().substring(0, 6); // Generate a 6-digit code
+        System.out.println("2FA Code sent to " + user.getEmail() + ": " + code);
+        return code;
+    }
+
+    // Validate 2FA code entered by user
+    public static boolean validate2FACode(User user, String enteredCode, String correctCode) {
+        if (enteredCode.equals(correctCode)) {
+            System.out.println("2FA validated for user: " + user.getUsername());
+            return true;
+        } else {
+            System.out.println("Invalid 2FA code for user: " + user.getUsername());
+            return false;
+        }
+    }
+}
 
 
 
