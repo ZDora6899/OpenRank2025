@@ -774,3 +774,80 @@
                 </svg>
             `;
         }
+        // ================= UI 更新逻辑 =================
+
+        function openDashboard(data) {
+            // 填充 DOM 数据
+            document.getElementById('dash-title').innerText = data.country;
+            document.getElementById('dash-continent').innerText = data.continent;
+            document.getElementById('dash-count').innerText = data.count + '万';
+            document.getElementById('dash-growth').innerText = '+' + data.growthRate + '%';
+            document.getElementById('dash-rank').innerText = '#' + data.rank;
+            document.getElementById('dash-score').innerText = data.score;
+
+            // 渲染图表
+            document.getElementById('trendChart').innerHTML = createTrendChart(data.history);
+            
+            // 渲染技能条 HTML
+            const techHTML = data.skills.map(s => `
+                <div class="skill-row">
+                    <span class="skill-name">${s.name}</span>
+                    <div class="skill-bar-bg">
+                        <div class="skill-bar-fill" style="width: ${s.val}%"></div>
+                    </div>
+                    <span style="margin-left:5px; width:30px; text-align:right;">${Math.round(s.val)}%</span>
+                </div>
+            `).join('');
+            document.getElementById('techStackList').innerHTML = techHTML;
+
+            // 渲染雷达图
+            document.getElementById('radarChart').innerHTML = createRadarChart(data.skills);
+
+            // CSS 动画切换面板：隐藏排行榜，显示详情页
+            document.getElementById('rankPanel').classList.add('hidden');
+            document.getElementById('rightPanel').classList.add('active');
+        }
+
+        function closeDashboard() {
+            document.getElementById('rankPanel').classList.remove('hidden');
+            document.getElementById('rightPanel').classList.remove('active');
+            autoRotate = true; // 恢复自动旋转
+        }
+        
+        // 渲染左下角大洲统计表
+        function renderRegionTable() {
+            const regionStats = {};
+            // 数据聚合逻辑
+            fullData.forEach(d => {
+                if(!regionStats[d.continent]) {
+                    regionStats[d.continent] = { count: 0, growthSum: 0, num: 0 };
+                }
+                regionStats[d.continent].count += d.count;
+                regionStats[d.continent].growthSum += parseFloat(d.growthRate);
+                regionStats[d.continent].num++;
+            });
+            
+            const tbody = document.getElementById('regionTableBody');
+            const sortedRegions = Object.keys(regionStats).sort((a,b) => regionStats[b].count - regionStats[a].count);
+            
+            sortedRegions.forEach(r => {
+                const s = regionStats[r];
+                const avgGrowth = (s.growthSum / s.num).toFixed(1);
+                const totalCount = s.count.toFixed(1);
+                
+                const colorHex = config.colors[config.colorMap[r]];
+                const colorStr = '#' + colorHex.toString(16).padStart(6, '0');
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span style="color:${colorStr}; margin-right:5px;">●</span>${r}</td>
+                    <td class="num">${totalCount}M</td>
+                    <td class="num ${avgGrowth > 10 ? 'trend-up' : 'trend-neutral'}">+${avgGrowth}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        renderRegionTable(); // 启动时调用
+        window.closeDashboard = closeDashboard;
+        window.switchView = switchView;
