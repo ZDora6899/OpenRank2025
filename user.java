@@ -608,6 +608,21 @@ public class SubscriptionManager {
         return subscriptions.getOrDefault(user.getEmail(), "No subscription.");
     }
 }
+public class RoleManager {
+
+    // Assign a new role to a user
+    public void assignRole(User user, String role) {
+        user.setRole(role);
+        System.out.println("Role " + role + " assigned to user: " + user.getUsername());
+    }
+
+    // Modify an existing role
+    public void modifyRole(User user, String newRole) {
+        user.setRole(newRole);
+        System.out.println("Role changed to " + newRole + " for user: " + user.getUsername());
+    }
+}
+
 
 
 
