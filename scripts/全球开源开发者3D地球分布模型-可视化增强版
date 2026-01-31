@@ -274,3 +274,16 @@
         #close-btn:hover { opacity: 1; }
     </style>
 </head>
+<body>
+    <div id="container"></div>
+
+    <!-- 标题与视图控制 -->
+    <div id="header">
+        <h1>Global Dev Matrix</h1>
+        <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">全球开发者多维数据分析系统</div>
+        
+        <div class="view-switcher">
+            <button class="view-btn active" onclick="switchView('count')">👥 总量视图 / Count</button>
+            <button class="view-btn" onclick="switchView('growth')">📈 增长视图 / Growth</button>
+        </div>
+    </div>
