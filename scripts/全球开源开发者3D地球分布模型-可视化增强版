@@ -396,3 +396,13 @@
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
     </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        varying vec3 vNormal;
+        uniform vec3 glowColor;
+        void main() {
+            // 计算视线与法线的点积，边缘处点积小，中心大
+            // 使用 pow 函数增强边缘效果，形成光晕
+            float intensity = pow(0.7 - dot(vNormal, vec3(0, 0, 1.0)), 4.0);
+            gl_FragColor = vec4(glowColor, 1.0) * intensity;
+        }
+    </script>
