@@ -5,24 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>全球开源开发者 3D 可视化系统 - 专业分析版</title>
     <style>
+        /* --- CSS 变量定义：统一管理配色方案 --- */
         :root {
-            --primary-color: #00f3ff;
-            --secondary-color: #ff0055;
-            --growth-color: #00ff88;
-            --glass-bg: rgba(15, 23, 35, 0.75);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.15);
-            --text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+            --primary-color: #00f3ff;   /* 主色调：青色，用于高亮和文字 */
+            --secondary-color: #ff0055; /* 次色调：洋红，用于雷达图等 */
+            --growth-color: #00ff88;    /* 增长色：绿色，用于显示正增长 */
+            --glass-bg: rgba(15, 23, 35, 0.75); /* 玻璃拟态背景色 */
+            --glass-border: 1px solid rgba(255, 255, 255, 0.15); /* 玻璃边框 */
+            --text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); /* 文字发光效果 */
             --panel-padding: 20px;
         }
 
         body {
             margin: 0;
-            overflow: hidden;
+            overflow: hidden; /* 防止页面出现滚动条 */
             background-color: #050510;
             font-family: 'Segoe UI', 'Roboto', sans-serif;
             color: #eee;
         }
 
+        /* 3D Canvas 容器，背景使用径向渐变模拟宇宙深空 */
         #container {
             position: absolute;
             width: 100%;
@@ -30,31 +32,32 @@
             background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
         }
 
-        /* 滚动条样式 */
+        /* --- 自定义滚动条样式 (Webkit内核) --- */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary-color); }
 
-        /* 面板基础 */
+        /* --- 玻璃拟态面板通用样式 --- */
         .glass-panel {
             background: var(--glass-bg);
-            backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px); /* 核心：背景模糊 */
             -webkit-backdrop-filter: blur(16px);
             border: var(--glass-border);
             border-radius: 12px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* 平滑过渡动画 */
             pointer-events: auto; 
         }
 
+        /* 顶部标题栏 */
         #header {
             position: absolute;
             top: 20px;
             left: 0;
             width: 100%;
             text-align: center;
-            pointer-events: none;
+            pointer-events: none; /* 让鼠标事件穿透 Header，以便操作后面的 3D 地球 */
             z-index: 10;
         }
 
@@ -63,13 +66,14 @@
             font-size: 28px;
             letter-spacing: 3px;
             text-transform: uppercase;
+            /* 文字渐变填充效果 */
             background: linear-gradient(90deg, #fff, var(--primary-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
         }
 
-        /* 视图切换器 */
+        /* 视图切换器按钮组 */
         .view-switcher {
             display: inline-flex;
             background: rgba(0,0,0,0.5);
@@ -77,7 +81,7 @@
             padding: 4px;
             margin-top: 10px;
             border: 1px solid rgba(255,255,255,0.1);
-            pointer-events: auto;
+            pointer-events: auto; /* 恢复按钮的点击交互 */
         }
 
         .view-btn {
@@ -98,7 +102,7 @@
             box-shadow: 0 0 10px var(--primary-color);
         }
 
-        /* 左侧面板 */
+        /* --- 侧边栏布局定位 --- */
         #leftPanel {
             position: absolute;
             top: 100px;
@@ -108,7 +112,6 @@
             padding: var(--panel-padding);
         }
 
-        /* 左下角面板 */
         #bottomLeftPanel {
             position: absolute;
             bottom: 30px;
@@ -118,6 +121,7 @@
             padding: 15px;
         }
 
+        /* 搜索框样式 */
         .search-box { position: relative; margin-bottom: 20px; }
         .search-box input {
             width: 100%;
@@ -166,7 +170,7 @@
         .trend-up { color: var(--growth-color); }
         .trend-neutral { color: #aaa; }
 
-        /* 右侧面板 (分析仪表盘) */
+        /* 右侧详情面板：初始状态隐藏在屏幕右侧 */
         #rightPanel {
             position: absolute;
             top: 100px;
@@ -178,12 +182,12 @@
             flex-direction: column;
             gap: 15px;
             overflow-y: auto;
-            transform: translateX(360px); /* 默认隐藏 */
+            transform: translateX(360px); /* 默认移出屏幕 */
             opacity: 0;
         }
 
         #rightPanel.active {
-            transform: translateX(0);
+            transform: translateX(0); /* 激活时滑入 */
             opacity: 1;
         }
 
@@ -198,19 +202,20 @@
             transition: transform 0.4s ease, opacity 0.4s ease;
         }
 
+        /* 当详情面板显示时，隐藏排行榜 */
         #rankPanel.hidden {
             transform: translateX(300px);
             opacity: 0;
             pointer-events: none;
         }
 
-        /* 统计数字 */
+        /* 统计数字网格布局 */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .stat-card { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; text-align: center; }
         .stat-card .val { font-size: 18px; color: #fff; font-weight: bold; display: block; }
         .stat-card .lbl { font-size: 10px; color: #888; }
 
-        /* SVG 图表样式 */
+        /* SVG 图表通用容器 */
         .chart-container {
             width: 100%;
             height: 120px;
@@ -225,17 +230,17 @@
         .area-path { fill: rgba(0, 243, 255, 0.1); stroke: none; }
         .grid-line { stroke: rgba(255,255,255,0.05); stroke-width: 1; }
         
-        /* 技能条 */
+        /* 技能条组件 */
         .skill-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
         .skill-name { width: 60px; color: #aaa; }
         .skill-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
         .skill-bar-fill { height: 100%; background: var(--primary-color); border-radius: 3px; width: 0; transition: width 1s ease; }
 
-        /* 雷达图多边形 */
+        /* 雷达图 SVG 样式 */
         .radar-poly { fill: rgba(255, 0, 85, 0.2); stroke: var(--secondary-color); stroke-width: 2; }
         .radar-bg { fill: none; stroke: rgba(255,255,255,0.1); }
 
-        /* 排行榜列表 */
+        /* 排行榜列表项 */
         .rank-item {
             display: flex; align-items: center; padding: 8px 5px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; transition: 0.2s;
@@ -246,7 +251,7 @@
         .rank-name { flex: 1; font-size: 13px; }
         .rank-val { color: var(--primary-color); font-family: monospace; }
 
-        /* Tooltip */
+        /* 鼠标悬停提示框 (Tooltip) */
         #tooltip {
             position: absolute;
             background: rgba(0, 0, 0, 0.9);
@@ -255,7 +260,7 @@
             padding: 10px 15px;
             border-radius: 4px;
             font-size: 13px;
-            pointer-events: none;
+            pointer-events: none; /* 防止鼠标卡在 Tooltip 上 */
             z-index: 200;
             display: none;
             white-space: nowrap;
@@ -272,6 +277,7 @@
 <body>
     <div id="container"></div>
 
+    <!-- 标题与视图控制 -->
     <div id="header">
         <h1>Global Dev Matrix</h1>
         <div style="font-size: 12px; color: #aaa; margin-bottom: 5px;">全球开发者多维数据分析系统</div>
@@ -281,8 +287,7 @@
             <button class="view-btn" onclick="switchView('growth')">📈 增长视图 / Growth</button>
         </div>
     </div>
-
-    <!-- 左侧搜索与图例 -->
+    <!-- 左侧：搜索与全局概览 -->
     <div id="leftPanel" class="glass-panel">
         <div class="search-box">
             <input type="text" id="countrySearch" placeholder="🔍 Search Country..." autocomplete="off">
@@ -304,11 +309,11 @@
 
         <div class="panel-section">
             <div class="panel-title">Color Legend</div>
+            <!-- JS 动态填充颜色图例 -->
             <div id="legendList" style="font-size: 12px; line-height: 1.8;"></div>
         </div>
     </div>
-
-    <!-- 左下角：区域数据汇总 -->
+    <!-- 左下角：区域数据汇总表 -->
     <div id="bottomLeftPanel" class="glass-panel">
         <div class="panel-title">Regional Analysis</div>
         <table class="data-table">
@@ -320,18 +325,17 @@
                 </tr>
             </thead>
             <tbody id="regionTableBody">
-                <!-- JS Populated -->
+                <!-- JS 动态填充 -->
             </tbody>
         </table>
     </div>
-
-    <!-- 右侧排行榜 (默认显示) -->
+    <!-- 右侧：排行榜 (默认显示) -->
     <div id="rankPanel" class="glass-panel">
         <div class="panel-title">Top 10 Hubs</div>
         <div id="rankingList"></div>
     </div>
 
-    <!-- 右侧详细分析面板 (点击触发) -->
+    <!-- 右侧：详细分析面板 (点击 3D 柱体后显示) -->
     <div id="rightPanel" class="glass-panel" style="padding: 20px;">
         <button id="close-btn" onclick="closeDashboard()">×</button>
         <h2 id="dash-title" style="margin: 0 0 5px 0; color: var(--primary-color);">Country Name</h2>
@@ -357,39 +361,37 @@
             </div>
         </div>
 
-        <!-- 5年趋势图 -->
+        <!-- 5年趋势图 (JS 生成 SVG) -->
         <div class="panel-section">
             <div class="panel-title">5-Year Growth Trend</div>
-            <div class="chart-container" id="trendChart">
-                <!-- SVG inserted by JS -->
-            </div>
+            <div class="chart-container" id="trendChart"></div>
         </div>
 
         <!-- 技术栈分布 -->
         <div class="panel-section">
             <div class="panel-title">Tech Stack Focus</div>
-            <div id="techStackList">
-                <!-- JS Populated -->
-            </div>
+            <div id="techStackList"></div>
         </div>
 
-        <!-- 能力雷达 -->
+        <!-- 能力雷达 (JS 生成 SVG) -->
         <div class="panel-section">
             <div class="panel-title">Ecosystem Maturity</div>
-            <div class="chart-container" style="height: 160px; display: flex; justify-content: center;" id="radarChart">
-                <!-- SVG inserted by JS -->
-            </div>
+            <div class="chart-container" style="height: 160px; display: flex; justify-content: center;" id="radarChart"></div>
         </div>
     </div>
-
+   <!-- 悬浮 Tooltip 容器 -->
     <div id="tooltip"></div>
 
+    <!-- 引入 Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    <!-- Shader Code -->
+    <!-- 
+        Shader Code: 自定义着色器用于制作大气层光晕效果 
+    -->
     <script id="vertexShader" type="x-shader/x-vertex">
         varying vec3 vNormal;
         void main() {
+            // 计算法线向量并传递给片元着色器
             vNormal = normalize(normalMatrix * normal);
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
@@ -398,25 +400,29 @@
         varying vec3 vNormal;
         uniform vec3 glowColor;
         void main() {
+            // 计算视线与法线的点积，边缘处点积小，中心大
+            // 使用 pow 函数增强边缘效果，形成光晕
             float intensity = pow(0.7 - dot(vNormal, vec3(0, 0, 1.0)), 4.0);
             gl_FragColor = vec4(glowColor, 1.0) * intensity;
         }
     </script>
     <script>
-        // --- 配置与全局状态 ---
+        // ================= 配置与全局状态 =================
         const config = {
+            // 定义各大洲的代表色
             colors: {
                 Asia: 0xff3333, NorthAmerica: 0x3388ff, Europe: 0x33ff33,
                 SouthAmerica: 0xffaa00, Africa: 0xcc33ff, Oceania: 0x00ffff
             },
+            // 映射关系
             colorMap: { 'Asia': 'Asia', 'North America': 'NorthAmerica', 'Europe': 'Europe', 'South America': 'SouthAmerica', 'Africa': 'Africa', 'Oceania': 'Oceania' }
         };
         
-        let currentViewMode = 'count'; // 'count' or 'growth'
+        let currentViewMode = 'count'; // 当前视图模式：'count'(总量) 或 'growth'(增长率)
         let selectedCountry = null;
         
-        // --- 数据生成与增强 ---
-        // 原始基础数据
+        // ================= 数据生成与增强 =================
+        // 原始基础数据 (Lat/Lon 为地理坐标)
         const baseData = [
             { country: 'China', zh:'中国', count: 198.2, lat: 35.8617, lon: 104.1954, continent: 'Asia' },
             { country: 'USA', zh:'美国', count: 476.1, lat: 37.0902, lon: -95.7129, continent: 'North America' },
@@ -438,21 +444,22 @@
             { country: 'Sweden', zh:'瑞典', count: 24.0, lat: 60.1282, lon: 18.6435, continent: 'Europe' }
         ];
 
-        // 自动增强数据：添加模拟的历史趋势、技能分布等
+        // 自动增强数据：通过算法模拟历史趋势、技能分布等详细数据
         const fullData = baseData.map((item, idx) => {
-            // 模拟增长率 (发展中国家通常更高)
+            // 模拟增长率：发展中国家通常有更高的随机增长基数
             const isEmerging = ['Asia', 'Africa', 'South America'].includes(item.continent) && item.country !== 'Japan';
             const growthRate = isEmerging ? (10 + Math.random() * 20) : (2 + Math.random() * 8);
             
-            // 模拟 5年 历史数据
+            // 模拟 5年 历史数据 (用于绘制面积图)
             const history = [];
             let current = item.count;
             for(let i=0; i<5; i++) {
                 history.unshift(current);
+                // 逆推历史数据
                 current = current / (1 + (growthRate + Math.random()*2)/100);
             }
 
-            // 模拟技能分布
+            // 模拟技能分布 (用于绘制技能条和雷达图)
             const skills = [
                 { name: 'Web', val: 30 + Math.random() * 30 },
                 { name: 'AI/ML', val: 10 + Math.random() * 20 },
@@ -460,41 +467,41 @@
                 { name: 'Mobile', val: 10 + Math.random() * 15 },
                 { name: 'Data', val: 10 + Math.random() * 15 }
             ];
-            // 归一化技能
+            // 归一化技能占比
             const totalSkill = skills.reduce((a,b) => a + b.val, 0);
             skills.forEach(s => s.val = (s.val / totalSkill * 100).toFixed(1));
 
             return {
                 ...item,
-                rank: idx + 1, // 初始假排名，后面会重排
+                rank: idx + 1, // 初始排名
                 growthRate: growthRate.toFixed(1),
                 history: history.map(v => parseFloat(v.toFixed(1))),
                 skills: skills.sort((a,b) => b.val - a.val),
-                score: (8.0 + Math.random() * 1.9).toFixed(1), // 开源贡献评分
+                score: (8.0 + Math.random() * 1.9).toFixed(1), // 模拟开源贡献评分
                 colorHex: config.colors[config.colorMap[item.continent]]
             };
         });
 
-        // 按数量排序
+        // 按数量重新排序
         fullData.sort((a,b) => b.count - a.count);
         fullData.forEach((d, i) => d.rank = i + 1);
 
-        // --- Three.js 初始化 ---
+        // ================= Three.js 初始化 =================
         const scene = new THREE.Scene();
+        // 添加黑色雾气效果，增加空间深邃感
         scene.fog = new THREE.FogExp2(0x050510, 0.0025);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 3.8;
+        camera.position.z = 3.8; // 摄像机距离
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 优化高分屏性能
         document.getElementById('container').appendChild(renderer.domElement);
 
         const earthGroup = new THREE.Group();
         scene.add(earthGroup);
-
-        // 1. 地球
+        // 1. 创建地球
         const loader = new THREE.TextureLoader();
         const earthMesh = new THREE.Mesh(
             new THREE.SphereGeometry(1, 64, 64),
@@ -507,25 +514,24 @@
             })
         );
         earthGroup.add(earthMesh);
-
-        // 2. 大气 Shader
+        // 2. 创建大气层 (ShaderMaterial)
         const atmosMat = new THREE.ShaderMaterial({
             uniforms: { glowColor: { value: new THREE.Color(0x00aaff) } },
             vertexShader: document.getElementById('vertexShader').textContent,
             fragmentShader: document.getElementById('fragmentShader').textContent,
-            side: THREE.BackSide,
-            blending: THREE.AdditiveBlending,
+            side: THREE.BackSide, // 渲染背面，使光晕包裹地球
+            blending: THREE.AdditiveBlending, // 叠加混合模式
             transparent: true
         });
         const atmos = new THREE.Mesh(new THREE.SphereGeometry(1.25, 64, 64), atmosMat);
         scene.add(atmos);
-
-        // 3. 数据柱体
+        // 3. 数据可视化柱体生成
         const bars = [];
-        const hitObjects = []; // 交互对象
+        const hitObjects = []; // 用于射线检测的隐形对象集合
         const maxCount = fullData[0].count;
         const maxGrowth = Math.max(...fullData.map(d => parseFloat(d.growthRate)));
 
+        // 核心算法：将经纬度转换为 3D 空间坐标 (Vector3)
         function latLonToVec3(lat, lon, radius) {
             const phi = (90 - lat) * (Math.PI / 180);
             const theta = (lon + 90) * (Math.PI / 180);
@@ -534,16 +540,13 @@
             const y = (radius * Math.cos(phi));
             return new THREE.Vector3(x, y, z);
         }
-
         fullData.forEach(data => {
-            // 使用六边形柱体代替方块，更有科技感
-            // CylinderGeometry(radiusTop, radiusBottom, height, radialSegments)
-            // 半径从 0.02 增加到 0.015 (直径约0.03)，并使用6边形
+            // 使用六边形柱体 (Cylinder with 6 segments)，更有科技感
             const barGeo = new THREE.CylinderGeometry(0.015, 0.015, 1, 6);
             
-            // 调整几何体方向：默认是Y轴朝上，我们需要它沿着Z轴朝向外面
+            // 调整几何体方向：默认是Y轴朝上，旋转使其沿着Z轴朝向外面
             barGeo.rotateX(Math.PI / 2); 
-            // 调整锚点：将中心从(0,0,0)移动到Z轴正方向的0.5处，这样底面就在(0,0,0)
+            // 调整锚点：将中心从(0,0,0)移动到Z轴正方向的0.5处，使底部位于地球表面
             barGeo.translate(0, 0, 0.5);
 
             const material = new THREE.MeshPhongMaterial({ 
@@ -556,65 +559,66 @@
             });
             const bar = new THREE.Mesh(barGeo, material);
             
+            // 定位并朝向圆心
             const pos = latLonToVec3(data.lat, data.lon, 1.0);
             bar.position.copy(pos);
             bar.lookAt(0,0,0);
 
-            // 计算该模式下的高度 - 增加高度系数让柱子更明显 (0.8 -> 1.2)
+            // 计算两种视图模式下的目标高度
             const heightCount = (data.count / maxCount) * 1.2 + 0.05;
             const heightGrowth = (data.growthRate / maxGrowth) * 1.2 + 0.05;
 
+            // 存储数据和状态到 userData
             bar.userData = { 
                 data: data,
                 heightCount: heightCount,
                 heightGrowth: heightGrowth,
-                targetHeight: heightCount, // 当前目标高度
-                currentHeight: 0 // 动画起始
+                targetHeight: heightCount, // 当前动画目标
+                currentHeight: 0 // 动画起始高度
             };
             
-            bar.scale.z = 0.01; // 初始为0
+            bar.scale.z = 0.01; // 初始为0，通过动画增长
             earthGroup.add(bar);
             bars.push(bar);
 
-            // 点击热区 (隐形大球体，方便点击)
+            // 创建点击热区 (隐形大球体，比柱子大，方便鼠标点击)
             const hitGeo = new THREE.SphereGeometry(0.04, 8, 8);
             const hitMat = new THREE.MeshBasicMaterial({ visible: false });
             const hitSphere = new THREE.Mesh(hitGeo, hitMat);
             hitSphere.position.copy(latLonToVec3(data.lat, data.lon, 1.02));
-            hitSphere.userData = { linkedBar: bar };
+            hitSphere.userData = { linkedBar: bar }; // 链接到对应的柱体
             earthGroup.add(hitSphere);
             hitObjects.push(hitSphere);
         });
 
-        // 4. 灯光
-        scene.add(new THREE.AmbientLight(0x404040));
-        const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+        // 4. 灯光设置
+        scene.add(new THREE.AmbientLight(0x404040)); // 环境光
+        const sun = new THREE.DirectionalLight(0xffffff, 1.5); // 主光源
         sun.position.set(5, 3, 5);
         scene.add(sun);
-        const blueLight = new THREE.PointLight(0x0044ff, 2, 10);
+        const blueLight = new THREE.PointLight(0x0044ff, 2, 10); // 背面冷光，增加立体感
         blueLight.position.set(-2, 0, -2);
         scene.add(blueLight);
-
-        // --- 交互逻辑 ---
+        // ================= 交互逻辑 =================
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let isDragging = false, previousMousePosition = { x: 0, y: 0 };
         let targetRotation = { x: 0, y: 0 };
-        let autoRotate = true;
+        let autoRotate = true; // 自动旋转开关
 
-        // 鼠标事件
+        // 鼠标移动监听：处理 Tooltip 和 拖拽逻辑
         window.addEventListener('mousemove', e => {
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
             
-            // Tooltip 跟随
+            // Tooltip 跟随鼠标
             const tooltip = document.getElementById('tooltip');
             if (tooltip.style.display === 'block') {
                 tooltip.style.left = (e.clientX + 15) + 'px';
                 tooltip.style.top = (e.clientY + 15) + 'px';
             }
         });
-
+        // 拖拽控制逻辑
         document.addEventListener('mousedown', () => { isDragging = true; autoRotate = false; });
         document.addEventListener('mouseup', () => isDragging = false);
         
@@ -624,12 +628,13 @@
                     x: e.offsetX - previousMousePosition.x,
                     y: e.offsetY - previousMousePosition.y
                 };
+                // 更新目标旋转角度
                 targetRotation.y += deltaMove.x * 0.005;
                 targetRotation.x += deltaMove.y * 0.005;
             }
             previousMousePosition = { x: e.offsetX, y: e.offsetY };
         });
-
+        // 点击事件：射线检测
         document.addEventListener('click', e => {
             if (isDragging) return; // 拖动时不触发点击
             if (e.target.closest('.glass-panel') || e.target.closest('.view-switcher')) return; // UI 点击忽略
@@ -640,69 +645,69 @@
             if (intersects.length > 0) {
                 const bar = intersects[0].object.userData.linkedBar;
                 selectCountry(bar);
-            } else {
-                // closeDashboard(); // 点击空白处是否关闭？暂时保留
             }
         });
-        // --- 功能函数 ---
+        // ================= 功能函数 =================
 
+        // 视图切换：总量 vs 增长
         function switchView(mode) {
             currentViewMode = mode;
-            // 更新按钮样式
+            // 更新按钮激活状态
             document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
-            // 更新柱体
+            // 批量更新所有柱体
             bars.forEach(bar => {
                 const data = bar.userData.data;
-                // 颜色切换
+                // 1. 颜色切换逻辑
                 let targetColor = data.colorHex;
                 if (mode === 'growth') {
-                    // 增长率热力图：红色(低) -> 绿色(高)
+                    // 增长率热力图模式：红色(低) -> 绿色(高)
                     const g = parseFloat(data.growthRate);
-                    const t = Math.min(Math.max((g - 2) / 20, 0), 1); // 归一化 2%~22%
-                    const color = new THREE.Color().setHSL(t * 0.35, 1.0, 0.5); // HSL 0(Red) to 0.35(Green)
+                    const t = Math.min(Math.max((g - 2) / 20, 0), 1); // 归一化到 0~1
+                    const color = new THREE.Color().setHSL(t * 0.35, 1.0, 0.5); // HSL 色相从 0(红) 到 0.35(绿)
                     targetColor = color.getHex();
                 } else {
                     targetColor = data.colorHex; // 恢复大洲颜色
                 }
                 
                 bar.material.color.setHex(targetColor);
-                bar.material.emissive.setHex(targetColor); // 更新自发光颜色
+                bar.material.emissive.setHex(targetColor);
                 
-                // 高度目标切换
+                // 2. 高度目标切换
                 bar.userData.targetHeight = mode === 'growth' ? bar.userData.heightGrowth : bar.userData.heightCount;
             });
         }
-
+        // 选中国家处理
         function selectCountry(bar) {
             const data = bar.userData.data;
             selectedCountry = data;
             
-            // 1. 地球旋转定位
+            // 1. 地球自动旋转定位到该国家
             autoRotate = false;
             const spherical = new THREE.Spherical().setFromVector3(bar.position);
+            // 计算旋转角度使目标点面向相机
             targetRotation.y = -spherical.theta - Math.PI / 2;
             targetRotation.x = Math.PI / 2 - spherical.phi;
 
-            // 2. 更新面板内容
+            // 2. 打开详情面板
             openDashboard(data);
         }
+        // --- SVG 图表生成器 ---
 
-        // --- 图表生成器 (SVG) ---
-
+        // 生成趋势面积图
         function createTrendChart(history) {
             const w = 280, h = 100;
             const max = Math.max(...history) * 1.1;
             const min = Math.min(...history) * 0.9;
+            // 计算坐标点字符串
             const points = history.map((val, i) => {
                 const x = (i / (history.length - 1)) * w;
                 const y = h - ((val - min) / (max - min)) * h;
                 return `${x},${y}`;
             }).join(' ');
 
-            // 生成面积闭合路径
-            const areaPoints = `0,${h} ${points} ${w},${h}`;
+            const areaPoints = `0,${h} ${points} ${w},${h}`; // 闭合路径用于填充面积
 
             return `
                 <svg viewBox="0 0 ${w} ${h}">
@@ -714,7 +719,6 @@
                     </defs>
                     <path class="area-path" d="M${areaPoints} Z" fill="url(#grad)" />
                     <polyline points="${points}" class="line-path" />
-                    <!-- 数据点 -->
                     ${history.map((val, i) => {
                          const x = (i / (history.length - 1)) * w;
                          const y = h - ((val - min) / (max - min)) * h;
@@ -723,14 +727,14 @@
                 </svg>
             `;
         }
-
+        // 生成雷达图
         function createRadarChart(skills) {
             const size = 140;
             const center = size / 2;
             const radius = size / 2 - 10;
             const sides = skills.length;
             
-            // 计算坐标函数
+            // 计算多边形顶点的辅助函数
             const getPoint = (idx, value) => {
                 const angle = (Math.PI * 2 * idx) / sides - Math.PI / 2;
                 const r = (value / 100) * radius;
@@ -740,7 +744,7 @@
                 };
             };
 
-            // 生成网格
+            // 1. 生成背景网格 (同心多边形)
             let gridSVG = '';
             [0.2, 0.4, 0.6, 0.8, 1.0].forEach(level => {
                 const pts = skills.map((_, i) => {
@@ -750,15 +754,15 @@
                 gridSVG += `<polygon points="${pts}" class="radar-bg" />`;
             });
 
-            // 数据多边形
+            // 2. 生成数据区域
             const dataPoints = skills.map((s, i) => {
                 const p = getPoint(i, s.val);
                 return `${p.x},${p.y}`;
             }).join(' ');
 
-            // 轴线与标签
+            // 3. 生成文字标签
             const axesSVG = skills.map((s, i) => {
-                const p = getPoint(i, 115); // 标签位置
+                const p = getPoint(i, 115); // 文字稍微靠外
                 return `<text x="${p.x}" y="${p.y}" fill="#888" font-size="10" text-anchor="middle" alignment-baseline="middle">${s.name}</text>`;
             }).join('');
 
@@ -770,10 +774,10 @@
                 </svg>
             `;
         }
-
-        // --- UI 更新逻辑 ---
+        // ================= UI 更新逻辑 =================
 
         function openDashboard(data) {
+            // 填充 DOM 数据
             document.getElementById('dash-title').innerText = data.country;
             document.getElementById('dash-continent').innerText = data.continent;
             document.getElementById('dash-count').innerText = data.count + '万';
@@ -784,7 +788,7 @@
             // 渲染图表
             document.getElementById('trendChart').innerHTML = createTrendChart(data.history);
             
-            // 渲染技能条
+            // 渲染技能条 HTML
             const techHTML = data.skills.map(s => `
                 <div class="skill-row">
                     <span class="skill-name">${s.name}</span>
@@ -799,7 +803,7 @@
             // 渲染雷达图
             document.getElementById('radarChart').innerHTML = createRadarChart(data.skills);
 
-            // 动画切换面板
+            // CSS 动画切换面板：隐藏排行榜，显示详情页
             document.getElementById('rankPanel').classList.add('hidden');
             document.getElementById('rightPanel').classList.add('active');
         }
@@ -807,13 +811,13 @@
         function closeDashboard() {
             document.getElementById('rankPanel').classList.remove('hidden');
             document.getElementById('rightPanel').classList.remove('active');
-            autoRotate = true; // 恢复旋转
+            autoRotate = true; // 恢复自动旋转
         }
         
-        // --- 渲染左下角大洲统计表 ---
+        // 渲染左下角大洲统计表
         function renderRegionTable() {
-            // 聚合数据
             const regionStats = {};
+            // 数据聚合逻辑
             fullData.forEach(d => {
                 if(!regionStats[d.continent]) {
                     regionStats[d.continent] = { count: 0, growthSum: 0, num: 0 };
@@ -824,8 +828,6 @@
             });
             
             const tbody = document.getElementById('regionTableBody');
-            
-            // 排序：按总人数降序
             const sortedRegions = Object.keys(regionStats).sort((a,b) => regionStats[b].count - regionStats[a].count);
             
             sortedRegions.forEach(r => {
@@ -833,7 +835,6 @@
                 const avgGrowth = (s.growthSum / s.num).toFixed(1);
                 const totalCount = s.count.toFixed(1);
                 
-                // 颜色
                 const colorHex = config.colors[config.colorMap[r]];
                 const colorStr = '#' + colorHex.toString(16).padStart(6, '0');
                 
@@ -848,11 +849,9 @@
         }
         
         renderRegionTable(); // 启动时调用
-
         window.closeDashboard = closeDashboard;
         window.switchView = switchView;
-
-        // 初始化排行榜
+        // 初始化排行榜 DOM
         const rankList = document.getElementById('rankingList');
         fullData.slice(0, 10).forEach(d => {
             const div = document.createElement('div');
@@ -862,6 +861,7 @@
                 <span class="rank-name">${d.country}</span>
                 <span class="rank-val">${d.count}万</span>
             `;
+            // 点击排行榜项联动 3D 地球
             div.onclick = () => {
                 const bar = bars.find(b => b.userData.data === d);
                 if(bar) selectCountry(bar);
@@ -876,31 +876,30 @@
             legendDiv.innerHTML += `<span style="color:${color}">●</span> ${k} <br>`;
         });
 
-        // 搜索功能
+        // 搜索功能实现
         document.getElementById('countrySearch').addEventListener('change', (e) => {
             const val = e.target.value.toLowerCase();
             const found = bars.find(b => b.userData.data.country.toLowerCase().includes(val) || b.userData.data.zh.includes(val));
             if(found) selectCountry(found);
             else alert('Country not found in top database.');
         });
-
-        // --- 渲染循环 ---
+        // ================= 渲染循环 =================
         function animate() {
             requestAnimationFrame(animate);
 
-            // 1. 旋转控制
+            // 1. 旋转平滑处理 (插值算法)
             if(autoRotate) targetRotation.y += 0.001;
             
             earthGroup.rotation.y += (targetRotation.y - earthGroup.rotation.y) * 0.05;
             earthGroup.rotation.x += (targetRotation.x - earthGroup.rotation.x) * 0.05;
 
-            // 2. 柱体动画 (Lerp height)
+            // 2. 柱体高度动画 (Lerp 插值)
             bars.forEach(bar => {
                 bar.userData.currentHeight += (bar.userData.targetHeight - bar.userData.currentHeight) * 0.1;
                 bar.scale.z = bar.userData.currentHeight;
             });
 
-            // 3. 射线检测 Tooltip
+            // 3. 射线检测 Tooltip 逻辑
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(hitObjects);
             
@@ -920,7 +919,7 @@
 
         animate();
 
-        // 窗口自适应
+        // 窗口大小自适应
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();

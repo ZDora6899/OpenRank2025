@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开源社区全域态势感知系统 | Open Source Intelligence</title>
+<!-- 引入科技感字体 -->
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<!-- 引入 GL 库用于更酷炫的效果 (可选，这里用标准版模拟高性能效果) -->
+<style>
+    :root {
+        --bg-color: #050a14;
+        --panel-bg: rgba(12, 24, 42, 0.6);
+        --border-color: rgba(30, 164, 255, 0.3);
+        --accent-cyan: #00f2ff;
+        --accent-blue: #0080ff;
+        --accent-purple: #bd00ff;
+        --text-primary: #e6f1ff;
+        --text-secondary: #8daacb;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Rajdhani', "Microsoft YaHei", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        overflow: hidden;
+        height: 100vh;
+        /* 复杂的背景网格 */
+        background-image: 
+            linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+            radial-gradient(circle at center, #0a1f35 0%, #050a14 100%);
+        background-size: 30px 30px, 30px 30px, 100% 100%;
+    }
+    /* 顶部标题栏 */
+    .header {
+        height: 8vh;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><path d="M0,0 L100%,0 L100%,70% L95%,100% L5%,100% L0,70% Z" fill="rgba(10,30,50,0.8)"/></svg>') no-repeat center top;
+        background-size: 100% 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 40px;
+        position: relative;
+        z-index: 10;
+        border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+    }
+
+    .header h1 {
+        font-size: 2.2rem;
+        margin: 0;
+        background: linear-gradient(to right, var(--accent-cyan), var(--text-primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    .header-stats {
+        display: flex;
+        gap: 30px;
+        font-size: 1.2rem;
+    }
+    
+    .stat-box {
+        text-align: right;
+    }
+    .stat-box span { display: block; font-size: 0.8rem; color: var(--text-secondary); }
+    .stat-box b { color: var(--accent-cyan); font-size: 1.4rem; font-family: 'Courier New', monospace; }
+    /* 主布局 */
+    .main-container {
+        display: grid;
+        grid-template-columns: 25% 50% 25%;
+        grid-template-rows: 60% 30%;
+        gap: 15px;
+        padding: 15px;
+        height: 92vh;
+    }
+
+    /* 玻璃拟态面板 */
+    .panel {
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        position: relative;
+        backdrop-filter: blur(5px);
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s;
+    }
+    .panel::before {
+        content: '';
+        position: absolute;
+        top: -1px; left: -1px; width: 10px; height: 10px;
+        border-top: 2px solid var(--accent-cyan);
+        border-left: 2px solid var(--accent-cyan);
+    }
+    .panel::after {
+        content: '';
+        position: absolute;
+        bottom: -1px; right: -1px; width: 10px; height: 10px;
+        border-bottom: 2px solid var(--accent-cyan);
+        border-right: 2px solid var(--accent-cyan);
+    }
+
+    .panel-title {
+        height: 35px;
+        line-height: 35px;
+        padding-left: 15px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--accent-cyan);
+        background: linear-gradient(90deg, rgba(0, 242, 255, 0.1), transparent);
+        border-bottom: 1px solid rgba(0, 242, 255, 0.1);
+        display: flex;
+        align-items: center;
+    }
+    
+    .panel-title::before {
+        content: '';
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        background: var(--accent-cyan);
+        margin-right: 8px;
+        box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    .chart-box {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    /* 中央大图区域 */
+    .center-map {
+        grid-row: 1 / 2;
+        grid-column: 2 / 3;
+        border: none;
+        background: transparent;
+        position: relative;
+    }
+    
+    /* 覆盖在中央地图上的数字看板 */
+    .digital-board {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 50px;
+        z-index: 5;
+    }
+    .db-item {
+        text-align: center;
+        background: rgba(0,0,0,0.5);
+        padding: 10px 20px;
+        border: 1px solid rgba(0,242,255,0.3);
+        box-shadow: 0 0 15px rgba(0,242,255,0.1) inset;
+    }
+    .db-num {
+        font-size: 2.5rem;
+        color: #fff;
+        font-weight: bold;
+        text-shadow: 0 0 10px var(--accent-blue);
+    }
+    .db-label {
+        color: var(--accent-cyan);
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+    }
+    /* 动态列表样式 */
+    .event-list {
+        padding: 10px;
+        overflow: hidden;
+        height: 100%;
+    }
+    .event-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 10px;
+        margin-bottom: 6px;
+        background: rgba(255,255,255,0.03);
+        border-left: 2px solid var(--accent-blue);
+        font-size: 0.85rem;
+        animation: slideIn 0.5s ease;
+    }
+    .event-item:nth-child(odd) { background: rgba(255,255,255,0.06); }
+    .tag {
+        padding: 2px 6px;
+        border-radius: 2px;
+        font-size: 0.7rem;
+        background: var(--accent-purple);
+        color: #fff;
+    }
+    
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    /* Grid合并规则 */
+    .col-left-top { grid-column: 1 / 2; grid-row: 1 / 2; }
+    .col-left-mid { grid-column: 1 / 2; grid-row: 2 / 3; } /* 高度调整 */
+    
+    .col-right-top { grid-column: 3 / 4; grid-row: 1 / 2; display: grid; grid-template-rows: 1fr 1fr; gap: 15px; border:none; background:none;}
+    .sub-panel { background: var(--panel-bg); border: 1px solid var(--border-color); backdrop-filter: blur(5px); display: flex; flex-direction: column; }
+    
+    .col-right-mid { grid-column: 3 / 4; grid-row: 2 / 3; }
+
+    .col-center-bot { grid-column: 2 / 3; grid-row: 2 / 3; }
+
+    /* 调整 Grid 行高分配 */
+    .main-container {
+        grid-template-rows: 65% 35%; /* 上大下小 */
+    }
+    /* 修正左侧布局，左侧现在容纳两个图表 */
+    .left-container {
+        grid-column: 1 / 2;
+        grid-row: 1 / 3;
+        display: grid;
+        grid-template-rows: 33% 33% 34%;
+        gap: 15px;
+    }
+    /* 修正右侧布局 */
+    .right-container {
+        grid-column: 3 / 4;
+        grid-row: 1 / 3;
+        display: grid;
+        grid-template-rows: 40% 30% 30%;
+        gap: 15px;
+    }
+
+    /* 覆盖修正 Main Container */
+    .main-container {
+        display: grid;
+        grid-template-columns: 25% 50% 25%;
+        grid-template-rows: 100%; /* 全高 */
+    }
+    
+    .center-container {
+        display: grid;
+        grid-template-rows: 70% 30%;
+        gap: 15px;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1><i style="color:var(--accent-cyan)">OSI</i> // 开源社区态势感知大屏</h1>
+    <div class="header-stats">
+        <div class="stat-box">
+            <span id="date">YYYY-MM-DD</span>
+            <b id="time">00:00:00</b>
+        </div>
+    </div>
+</div>
+<div class="main-container">
+
+    <!-- 左侧栏 -->
+    <div class="left-container">
+        <!-- 模块1：实时流量 -->
+        <div class="panel">
+            <div class="panel-title">LIVE // 代码提交/Issue实时流</div>
+            <div id="chart-realtime" class="chart-box"></div>
+        </div>
+
+        <!-- 模块2：语言构成 -->
+        <div class="panel">
+            <div class="panel-title">STACK // 技术栈多维分布</div>
+            <div id="chart-radar" class="chart-box"></div>
+        </div>
+
+        <!-- 模块3：贡献者漏斗 -->
+        <div class="panel">
+            <div class="panel-title">USER // 贡献者转化漏斗</div>
+            <div id="chart-funnel" class="chart-box"></div>
+        </div>
+    </div>
+    <!-- 中间栏 -->
+    <div class="center-container">
+        <!-- 核心视觉：引力网络 -->
+        <div class="panel center-map">
+            <div class="digital-board">
+                <div class="db-item">
+                    <div class="db-num" id="total-repos">0</div>
+                    <div class="db-label">监控仓库数</div>
+                </div>
+                <div class="db-item">
+                    <div class="db-num" id="total-commits">0</div>
+                    <div class="db-label">今日提交数</div>
+                </div>
+                <div class="db-item">
+                    <div class="db-num" id="active-devs">0</div>
+                    <div class="db-label">活跃开发者</div>
+                </div>
+            </div>
+            <div id="chart-main" class="chart-box"></div>
+        </div>
+
+        <!-- 底部：周活跃热力 -->
+        <div class="panel">
+            <div class="panel-title">HEATMAP // 全球协作热力时段</div>
+            <div id="chart-heatmap" class="chart-box"></div>
+        </div>
+    </div>
+    <!-- 右侧栏 -->
+    <div class="right-container">
+        <!-- 模块4：Top项目排行 -->
+        <div class="panel">
+            <div class="panel-title">RANK // 热门项目趋势榜</div>
+            <div id="chart-rank" class="chart-box"></div>
+        </div>
+
+        <!-- 模块5：PR处理效率 -->
+        <div class="panel">
+            <div class="panel-title">EFFICIENCY // PR合并耗时分布</div>
+            <div id="chart-gauge" class="chart-box"></div>
+        </div>
+
+        <!-- 模块6：动态日志 -->
+        <div class="panel">
+            <div class="panel-title">LOGS // 社区实时事件流</div>
+            <div class="chart-box" style="position:relative;">
+                <div class="event-list" id="eventList"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+// --- 基础工具 ---
+const getEle = (id) => document.getElementById(id);
+const myChart = (id) => echarts.init(getEle(id));
+
+// 1. 时间更新
+function updateTime() {
+    const now = new Date();
+    getEle('time').innerText = now.toLocaleTimeString('en-US', {hour12: false});
+    getEle('date').innerText = now.toLocaleDateString('zh-CN');
+}
+setInterval(updateTime, 1000);
+updateTime();
+
+// 数字增长动画
+function animateValue(id, start, end, duration) {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        getEle(id).innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
+}
+// 模拟初始数据加载
+animateValue("total-repos", 0, 12845, 2000);
+animateValue("total-commits", 0, 3429, 2000);
+animateValue("active-devs", 0, 892, 2000);
+
+// --- 图表配置 ---
+const colorPalette = ['#00f2ff', '#0080ff', '#bd00ff', '#ff00ee', '#ffa600'];
+// Chart 1: 实时折线图 (模拟动态数据)
+const chartRealtime = myChart('chart-realtime');
+let dataTime = [];
+let dataCommit = [];
+let dataIssue = [];
+let now = new Date();
+
+function addData(shift) {
+    now = new Date(+now + 1000);
+    dataTime.push([now.getHours(), now.getMinutes(), now.getSeconds()].join(':'));
+    dataCommit.push(Math.round(Math.random() * 20 + 10)); // 10-30
+    dataIssue.push(Math.round(Math.random() * 10 + 2));   // 2-12
+    if (shift) {
+        dataTime.shift();
+        dataCommit.shift();
+        dataIssue.shift();
+    }
+}
+for (let i = 0; i < 20; i++) { addData(false); }
+
+const optionRealtime = {
+    tooltip: { trigger: 'axis', backgroundColor: 'rgba(0,0,0,0.8)', borderColor: '#00f2ff', textStyle: {color: '#fff'} },
+    grid: { top: 30, bottom: 20, left: 40, right: 10, containLabel: true },
+    xAxis: { type: 'category', boundaryGap: false, data: dataTime, axisLine: {lineStyle: {color: '#1f4f7a'}} },
+    yAxis: { type: 'value', splitLine: {lineStyle: {color: '#0d2134'}} },
+    series: [
+        {
+            name: 'Commits', type: 'line', smooth: true, symbol: 'none',
+            lineStyle: { width: 3, shadowBlur: 10, shadowColor: '#00f2ff', color: '#00f2ff' },
+            areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{offset: 0, color: 'rgba(0, 242, 255, 0.4)'}, {offset: 1, color: 'rgba(0, 242, 255, 0.0)'}])
+            },
+            data: dataCommit
+        },
+        {
+            name: 'Issues', type: 'line', smooth: true, symbol: 'none',
+            lineStyle: { width: 3, shadowBlur: 10, shadowColor: '#bd00ff', color: '#bd00ff' },
+            data: dataIssue
+        }
+    ]
+};
+chartRealtime.setOption(optionRealtime);
+setInterval(function () {
+    addData(true);
+    chartRealtime.setOption({ xAxis: { data: dataTime }, series: [{ data: dataCommit }, { data: dataIssue }] });
+}, 2000);
