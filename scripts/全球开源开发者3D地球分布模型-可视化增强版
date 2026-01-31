@@ -678,3 +678,18 @@
                 bar.userData.targetHeight = mode === 'growth' ? bar.userData.heightGrowth : bar.userData.heightCount;
             });
         }
+        // 选中国家处理
+        function selectCountry(bar) {
+            const data = bar.userData.data;
+            selectedCountry = data;
+            
+            // 1. 地球自动旋转定位到该国家
+            autoRotate = false;
+            const spherical = new THREE.Spherical().setFromVector3(bar.position);
+            // 计算旋转角度使目标点面向相机
+            targetRotation.y = -spherical.theta - Math.PI / 2;
+            targetRotation.x = Math.PI / 2 - spherical.phi;
+
+            // 2. 打开详情面板
+            openDashboard(data);
+        }
