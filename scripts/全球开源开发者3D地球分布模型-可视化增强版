@@ -501,3 +501,16 @@
 
         const earthGroup = new THREE.Group();
         scene.add(earthGroup);
+        // 1. 创建地球
+        const loader = new THREE.TextureLoader();
+        const earthMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(1, 64, 64),
+            new THREE.MeshPhongMaterial({
+                map: loader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
+                specularMap: loader.load('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg'),
+                normalMap: loader.load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg'),
+                shininess: 5,
+                specular: new THREE.Color(0x333333)
+            })
+        );
+        earthGroup.add(earthMesh);
