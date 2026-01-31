@@ -693,3 +693,37 @@
             // 2. 打开详情面板
             openDashboard(data);
         }
+        // --- SVG 图表生成器 ---
+
+        // 生成趋势面积图
+        function createTrendChart(history) {
+            const w = 280, h = 100;
+            const max = Math.max(...history) * 1.1;
+            const min = Math.min(...history) * 0.9;
+            // 计算坐标点字符串
+            const points = history.map((val, i) => {
+                const x = (i / (history.length - 1)) * w;
+                const y = h - ((val - min) / (max - min)) * h;
+                return `${x},${y}`;
+            }).join(' ');
+
+            const areaPoints = `0,${h} ${points} ${w},${h}`; // 闭合路径用于填充面积
+
+            return `
+                <svg viewBox="0 0 ${w} ${h}">
+                    <defs>
+                        <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:var(--primary-color);stop-opacity:0.3" />
+                            <stop offset="100%" style="stop-color:var(--primary-color);stop-opacity:0" />
+                        </linearGradient>
+                    </defs>
+                    <path class="area-path" d="M${areaPoints} Z" fill="url(#grad)" />
+                    <polyline points="${points}" class="line-path" />
+                    ${history.map((val, i) => {
+                         const x = (i / (history.length - 1)) * w;
+                         const y = h - ((val - min) / (max - min)) * h;
+                         return `<circle cx="${x}" cy="${y}" r="3" fill="#fff" />`;
+                    }).join('')}
+                </svg>
+            `;
+        }
