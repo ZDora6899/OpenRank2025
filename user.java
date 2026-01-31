@@ -853,6 +853,31 @@ public class UserActivityWithTimestamp {
         System.out.println("User Activity Log: User: " + user.getUsername() + ", Activity: " + activity + ", Timestamp: " + timestamp);
     }
 }
+import java.util.Random;
+
+public class EmailVerification {
+
+    // Generate a random verification code
+    public static String generateVerificationCode() {
+        Random random = new Random();
+        StringBuilder code = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            code.append(random.nextInt(10)); // Append random digits
+        }
+        return code.toString();
+    }
+
+    // Send verification email with the generated code (simulated)
+    public static void sendVerificationEmail(User user, String code) {
+        System.out.println("Sending verification email to: " + user.getEmail());
+        System.out.println("Verification Code: " + code);
+    }
+
+    // Verify the code entered by the user
+    public static boolean verifyCode(String enteredCode, String actualCode) {
+        return enteredCode.equals(actualCode);
+    }
+}
 
 
 
