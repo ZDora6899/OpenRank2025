@@ -540,3 +540,62 @@
             const y = (radius * Math.cos(phi));
             return new THREE.Vector3(x, y, z);
         }
+        fullData.forEach(data => {
+            // 使用六边形柱体 (Cylinder with 6 segments)，更有科技感
+            const barGeo = new THREE.CylinderGeometry(0.015, 0.015, 1, 6);
+            
+            // 调整几何体方向：默认是Y轴朝上，旋转使其沿着Z轴朝向外面
+            barGeo.rotateX(Math.PI / 2); 
+            // 调整锚点：将中心从(0,0,0)移动到Z轴正方向的0.5处，使底部位于地球表面
+            barGeo.translate(0, 0, 0.5);
+
+            const material = new THREE.MeshPhongMaterial({ 
+                color: data.colorHex,
+                transparent: true,
+                opacity: 0.9,
+                shininess: 30,
+                emissive: data.colorHex,
+                emissiveIntensity: 0.3
+            });
+            const bar = new THREE.Mesh(barGeo, material);
+            
+            // 定位并朝向圆心
+            const pos = latLonToVec3(data.lat, data.lon, 1.0);
+            bar.position.copy(pos);
+            bar.lookAt(0,0,0);
+
+            // 计算两种视图模式下的目标高度
+            const heightCount = (data.count / maxCount) * 1.2 + 0.05;
+            const heightGrowth = (data.growthRate / maxGrowth) * 1.2 + 0.05;
+
+            // 存储数据和状态到 userData
+            bar.userData = { 
+                data: data,
+                heightCount: heightCount,
+                heightGrowth: heightGrowth,
+                targetHeight: heightCount, // 当前动画目标
+                currentHeight: 0 // 动画起始高度
+            };
+            
+            bar.scale.z = 0.01; // 初始为0，通过动画增长
+            earthGroup.add(bar);
+            bars.push(bar);
+
+            // 创建点击热区 (隐形大球体，比柱子大，方便鼠标点击)
+            const hitGeo = new THREE.SphereGeometry(0.04, 8, 8);
+            const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+            const hitSphere = new THREE.Mesh(hitGeo, hitMat);
+            hitSphere.position.copy(latLonToVec3(data.lat, data.lon, 1.02));
+            hitSphere.userData = { linkedBar: bar }; // 链接到对应的柱体
+            earthGroup.add(hitSphere);
+            hitObjects.push(hitSphere);
+        });
+
+        // 4. 灯光设置
+        scene.add(new THREE.AmbientLight(0x404040)); // 环境光
+        const sun = new THREE.DirectionalLight(0xffffff, 1.5); // 主光源
+        sun.position.set(5, 3, 5);
+        scene.add(sun);
+        const blueLight = new THREE.PointLight(0x0044ff, 2, 10); // 背面冷光，增加立体感
+        blueLight.position.set(-2, 0, -2);
+        scene.add(blueLight);
