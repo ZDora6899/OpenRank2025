@@ -590,6 +590,24 @@ public class NotificationManager {
         return notifications.getOrDefault(user.getEmail(), "No notifications.");
     }
 }
+public class SubscriptionManager {
+    private Map<String, String> subscriptions; // Map of email to subscription type
+
+    public SubscriptionManager() {
+        subscriptions = new HashMap<>();
+    }
+
+    // Subscribe a user to a specific type of notification
+    public void subscribeUser(User user, String subscriptionType) {
+        subscriptions.put(user.getEmail(), subscriptionType);
+        System.out.println("User " + user.getUsername() + " subscribed to " + subscriptionType + " notifications.");
+    }
+
+    // Get the subscription type for a user
+    public String getSubscription(User user) {
+        return subscriptions.getOrDefault(user.getEmail(), "No subscription.");
+    }
+}
 
 
 
