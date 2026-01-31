@@ -599,3 +599,22 @@
         const blueLight = new THREE.PointLight(0x0044ff, 2, 10); // 背面冷光，增加立体感
         blueLight.position.set(-2, 0, -2);
         scene.add(blueLight);
+        // ================= 交互逻辑 =================
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let isDragging = false, previousMousePosition = { x: 0, y: 0 };
+        let targetRotation = { x: 0, y: 0 };
+        let autoRotate = true; // 自动旋转开关
+
+        // 鼠标移动监听：处理 Tooltip 和 拖拽逻辑
+        window.addEventListener('mousemove', e => {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            
+            // Tooltip 跟随鼠标
+            const tooltip = document.getElementById('tooltip');
+            if (tooltip.style.display === 'block') {
+                tooltip.style.left = (e.clientX + 15) + 'px';
+                tooltip.style.top = (e.clientY + 15) + 'px';
+            }
+        });
