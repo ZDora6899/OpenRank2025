@@ -878,19 +878,30 @@ public class EmailVerification {
         return enteredCode.equals(actualCode);
     }
 }
-public class PasswordReset {
+public class AccountLocking {
 
-    // Send password reset request email (simulated)
-    public static void sendPasswordResetRequest(User user) {
-        String resetLink = "https://example.com/reset-password?user=" + user.getUsername();
-        System.out.println("Password reset link sent to: " + user.getEmail());
-        System.out.println("Reset Link: " + resetLink);
+    private Map<String, Integer> failedAttempts;
+
+    public AccountLocking() {
+        failedAttempts = new HashMap<>();
     }
 
-    // Validate password reset token (simple simulation)
-    public static boolean validateResetToken(String token) {
-        // In a real implementation, the token would be validated against a database or other secure storage
-        return token.equals("valid-token");
+    // Increment failed login attempts
+    public void incrementFailedAttempts(User user) {
+        failedAttempts.put(user.getEmail(), failedAttempts.getOrDefault(user.getEmail(), 0) + 1);
+        System.out.println("Failed attempts for user " + user.getUsername() + ": " + failedAttempts.get(user.getEmail()));
+    }
+
+    // Check if account is locked
+    public boolean isAccountLocked(User user) {
+        return failedAttempts.getOrDefault(user.getEmail(), 0) >= 5;
+    }
+
+    // Lock account after multiple failed attempts
+    public void lockAccount(User user) {
+        if (isAccountLocked(user)) {
+            System.out.println("Account locked for user: " + user.getUsername() + " due to multiple failed attempts.");
+        }
     }
 }
 
