@@ -709,6 +709,25 @@ public class PasswordExpirationManager {
         }
     }
 }
+public class UserPreferences {
+    private Map<String, String> preferences;
+
+    public UserPreferences() {
+        preferences = new HashMap<>();
+    }
+
+    // Set user preference (e.g., theme, language)
+    public void setPreference(User user, String key, String value) {
+        preferences.put(user.getEmail() + "_" + key, value);
+        System.out.println("Preference set for user: " + user.getUsername() + " | " + key + ": " + value);
+    }
+
+    // Get user preference
+    public String getPreference(User user, String key) {
+        return preferences.getOrDefault(user.getEmail() + "_" + key, "Default");
+    }
+}
+
 
 
 
