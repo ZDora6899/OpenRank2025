@@ -204,3 +204,18 @@
         from { opacity: 0; transform: translateX(20px); }
         to { opacity: 1; transform: translateX(0); }
     }
+    /* Grid合并规则 */
+    .col-left-top { grid-column: 1 / 2; grid-row: 1 / 2; }
+    .col-left-mid { grid-column: 1 / 2; grid-row: 2 / 3; } /* 高度调整 */
+    
+    .col-right-top { grid-column: 3 / 4; grid-row: 1 / 2; display: grid; grid-template-rows: 1fr 1fr; gap: 15px; border:none; background:none;}
+    .sub-panel { background: var(--panel-bg); border: 1px solid var(--border-color); backdrop-filter: blur(5px); display: flex; flex-direction: column; }
+    
+    .col-right-mid { grid-column: 3 / 4; grid-row: 2 / 3; }
+
+    .col-center-bot { grid-column: 2 / 3; grid-row: 2 / 3; }
+
+    /* 调整 Grid 行高分配 */
+    .main-container {
+        grid-template-rows: 65% 35%; /* 上大下小 */
+    }
