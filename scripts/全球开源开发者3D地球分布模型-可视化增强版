@@ -634,3 +634,16 @@
             }
             previousMousePosition = { x: e.offsetX, y: e.offsetY };
         });
+        // 点击事件：射线检测
+        document.addEventListener('click', e => {
+            if (isDragging) return; // 拖动时不触发点击
+            if (e.target.closest('.glass-panel') || e.target.closest('.view-switcher')) return; // UI 点击忽略
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(hitObjects);
+
+            if (intersects.length > 0) {
+                const bar = intersects[0].object.userData.linkedBar;
+                selectCountry(bar);
+            }
+        });
