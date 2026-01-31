@@ -1014,6 +1014,41 @@ public class AuthenticationRateLimiter {
         System.out.println("Failed login attempt recorded for user: " + user.getUsername());
     }
 }
+import java.util.HashMap;
+import java.util.Map;
+
+public class UserSessionManager {
+
+    private Map<String, String> activeSessions; // Maps user email to session ID
+
+    public UserSessionManager() {
+        activeSessions = new HashMap<>();
+    }
+
+    // Create a new session when the user logs in
+    public String createSession(User user) {
+        String sessionId = generateSessionId();
+        activeSessions.put(user.getEmail(), sessionId);
+        System.out.println("Session created for user: " + user.getUsername() + " | Session ID: " + sessionId);
+        return sessionId;
+    }
+
+    // Invalidate session when the user logs out
+    public void invalidateSession(User user) {
+        activeSessions.remove(user.getEmail());
+        System.out.println("Session invalidated for user: " + user.getUsername());
+    }
+
+    // Check if the user has an active session
+    public boolean isSessionActive(User user) {
+        return activeSessions.containsKey(user.getEmail());
+    }
+
+    // Generate a unique session ID (simulated)
+    private String generateSessionId() {
+        return Long.toHexString(System.currentTimeMillis());
+    }
+}
 
 
 
