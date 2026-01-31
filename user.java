@@ -774,6 +774,23 @@ public class TwoFactorAuthentication {
     }
 }
 
+import java.io.FileWriter;
+import java.io.IOException;
+import com.opencsv.CSVWriter;
+
+public class UserDataExport {
+
+    // Export user data to a CSV file
+    public void exportToCSV(User user) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter(user.getUsername() + "_data.csv"))) {
+            String[] record = {user.getUsername(), user.getEmail(), user.getRole()};
+            writer.writeNext(record);
+            System.out.println("User data exported to CSV: " + user.getUsername() + "_data.csv");
+        } catch (IOException e) {
+            System.out.println("Error exporting user data: " + e.getMessage());
+        }
+    }
+}
 
 
 
