@@ -406,3 +406,98 @@
             gl_FragColor = vec4(glowColor, 1.0) * intensity;
         }
     </script>
+    <script>
+        // ================= 配置与全局状态 =================
+        const config = {
+            // 定义各大洲的代表色
+            colors: {
+                Asia: 0xff3333, NorthAmerica: 0x3388ff, Europe: 0x33ff33,
+                SouthAmerica: 0xffaa00, Africa: 0xcc33ff, Oceania: 0x00ffff
+            },
+            // 映射关系
+            colorMap: { 'Asia': 'Asia', 'North America': 'NorthAmerica', 'Europe': 'Europe', 'South America': 'SouthAmerica', 'Africa': 'Africa', 'Oceania': 'Oceania' }
+        };
+        
+        let currentViewMode = 'count'; // 当前视图模式：'count'(总量) 或 'growth'(增长率)
+        let selectedCountry = null;
+        
+        // ================= 数据生成与增强 =================
+        // 原始基础数据 (Lat/Lon 为地理坐标)
+        const baseData = [
+            { country: 'China', zh:'中国', count: 198.2, lat: 35.8617, lon: 104.1954, continent: 'Asia' },
+            { country: 'USA', zh:'美国', count: 476.1, lat: 37.0902, lon: -95.7129, continent: 'North America' },
+            { country: 'India', zh:'印度', count: 239.9, lat: 20.5937, lon: 78.9629, continent: 'Asia' },
+            { country: 'Germany', zh:'德国', count: 95.0, lat: 51.1657, lon: 10.4515, continent: 'Europe' },
+            { country: 'UK', zh:'英国', count: 98.3, lat: 55.3781, lon: -3.4360, continent: 'Europe' },
+            { country: 'Brazil', zh:'巴西', count: 80.0, lat: -14.2350, lon: -51.9253, continent: 'South America' },
+            { country: 'Canada', zh:'加拿大', count: 79.6, lat: 56.1304, lon: -106.3468, continent: 'North America' },
+            { country: 'France', zh:'法国', count: 68.8, lat: 46.2276, lon: 2.2137, continent: 'Europe' },
+            { country: 'Russia', zh:'俄罗斯', count: 57.1, lat: 61.5240, lon: 105.3188, continent: 'Europe' },
+            { country: 'Japan', zh:'日本', count: 36.8, lat: 36.2048, lon: 138.2529, continent: 'Asia' },
+            { country: 'Australia', zh:'澳大利亚', count: 38.0, lat: -25.2744, lon: 133.7751, continent: 'Oceania' },
+            { country: 'Indonesia', zh:'印度尼西亚', count: 36.6, lat: -0.7893, lon: 113.9213, continent: 'Asia' },
+            { country: 'Netherlands', zh:'荷兰', count: 30.0, lat: 52.1326, lon: 5.2913, continent: 'Europe' },
+            { country: 'South Korea', zh:'韩国', count: 28.0, lat: 35.9078, lon: 127.7669, continent: 'Asia' },
+            { country: 'Nigeria', zh:'尼日利亚', count: 17.6, lat: 9.0820, lon: 8.6753, continent: 'Africa' },
+            { country: 'Singapore', zh:'新加坡', count: 15.0, lat: 1.3521, lon: 103.8198, continent: 'Asia' },
+            { country: 'Israel', zh:'以色列', count: 14.2, lat: 31.0461, lon: 34.8516, continent: 'Asia' },
+            { country: 'Sweden', zh:'瑞典', count: 24.0, lat: 60.1282, lon: 18.6435, continent: 'Europe' }
+        ];
+
+        // 自动增强数据：通过算法模拟历史趋势、技能分布等详细数据
+        const fullData = baseData.map((item, idx) => {
+            // 模拟增长率：发展中国家通常有更高的随机增长基数
+            const isEmerging = ['Asia', 'Africa', 'South America'].includes(item.continent) && item.country !== 'Japan';
+            const growthRate = isEmerging ? (10 + Math.random() * 20) : (2 + Math.random() * 8);
+            
+            // 模拟 5年 历史数据 (用于绘制面积图)
+            const history = [];
+            let current = item.count;
+            for(let i=0; i<5; i++) {
+                history.unshift(current);
+                // 逆推历史数据
+                current = current / (1 + (growthRate + Math.random()*2)/100);
+            }
+
+            // 模拟技能分布 (用于绘制技能条和雷达图)
+            const skills = [
+                { name: 'Web', val: 30 + Math.random() * 30 },
+                { name: 'AI/ML', val: 10 + Math.random() * 20 },
+                { name: 'Cloud', val: 15 + Math.random() * 20 },
+                { name: 'Mobile', val: 10 + Math.random() * 15 },
+                { name: 'Data', val: 10 + Math.random() * 15 }
+            ];
+            // 归一化技能占比
+            const totalSkill = skills.reduce((a,b) => a + b.val, 0);
+            skills.forEach(s => s.val = (s.val / totalSkill * 100).toFixed(1));
+
+            return {
+                ...item,
+                rank: idx + 1, // 初始排名
+                growthRate: growthRate.toFixed(1),
+                history: history.map(v => parseFloat(v.toFixed(1))),
+                skills: skills.sort((a,b) => b.val - a.val),
+                score: (8.0 + Math.random() * 1.9).toFixed(1), // 模拟开源贡献评分
+                colorHex: config.colors[config.colorMap[item.continent]]
+            };
+        });
+
+        // 按数量重新排序
+        fullData.sort((a,b) => b.count - a.count);
+        fullData.forEach((d, i) => d.rank = i + 1);
+
+        // ================= Three.js 初始化 =================
+        const scene = new THREE.Scene();
+        // 添加黑色雾气效果，增加空间深邃感
+        scene.fog = new THREE.FogExp2(0x050510, 0.0025);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 3.8; // 摄像机距离
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 优化高分屏性能
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        const earthGroup = new THREE.Group();
+        scene.add(earthGroup);
