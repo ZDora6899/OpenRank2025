@@ -657,6 +657,31 @@ public class UserDataBackup {
         }
     }
 }
+import java.io.File;
+import java.io.IOException;
+
+public class FileUploadManager {
+
+    // Upload a file
+    public void uploadFile(File file) {
+        if (file.exists()) {
+            System.out.println("Uploading file: " + file.getName());
+        } else {
+            System.out.println("File not found: " + file.getName());
+        }
+    }
+
+    // Simulate saving the uploaded file (in reality, this could involve saving the file to cloud storage or local server)
+    public void saveUploadedFile(File file) throws IOException {
+        File destination = new File("uploads/" + file.getName());
+        if (file.renameTo(destination)) {
+            System.out.println("File uploaded successfully: " + file.getName());
+        } else {
+            System.out.println("Failed to upload file: " + file.getName());
+        }
+    }
+}
+
 
 
 
