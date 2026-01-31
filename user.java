@@ -813,6 +813,36 @@ public class UserIpTracking {
         return userIpAddresses.getOrDefault(user.getEmail(), "No IP address tracked.");
     }
 }
+import java.util.regex.Pattern;
+
+public class PasswordStrengthValidator {
+
+    // Validate password strength
+    public static boolean validatePasswordStrength(String password) {
+        if (password.length() < 8) {
+            System.out.println("Password is too short. It must be at least 8 characters.");
+            return false;
+        }
+        if (!Pattern.compile("[A-Z]").matcher(password).find()) {
+            System.out.println("Password must contain at least one uppercase letter.");
+            return false;
+        }
+        if (!Pattern.compile("[a-z]").matcher(password).find()) {
+            System.out.println("Password must contain at least one lowercase letter.");
+            return false;
+        }
+        if (!Pattern.compile("[0-9]").matcher(password).find()) {
+            System.out.println("Password must contain at least one digit.");
+            return false;
+        }
+        if (!Pattern.compile("[^a-zA-Z0-9]").matcher(password).find()) {
+            System.out.println("Password must contain at least one special character.");
+            return false;
+        }
+        System.out.println("Password is strong.");
+        return true;
+    }
+}
 
 
 
