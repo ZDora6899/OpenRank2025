@@ -73,3 +73,23 @@
     }
     .stat-box span { display: block; font-size: 0.8rem; color: var(--text-secondary); }
     .stat-box b { color: var(--accent-cyan); font-size: 1.4rem; font-family: 'Courier New', monospace; }
+    /* 主布局 */
+    .main-container {
+        display: grid;
+        grid-template-columns: 25% 50% 25%;
+        grid-template-rows: 60% 30%;
+        gap: 15px;
+        padding: 15px;
+        height: 92vh;
+    }
+
+    /* 玻璃拟态面板 */
+    .panel {
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        position: relative;
+        backdrop-filter: blur(5px);
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s;
+    }
