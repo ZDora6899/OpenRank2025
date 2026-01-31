@@ -379,3 +379,20 @@
             <div class="chart-container" style="height: 160px; display: flex; justify-content: center;" id="radarChart"></div>
         </div>
     </div>
+   <!-- 悬浮 Tooltip 容器 -->
+    <div id="tooltip"></div>
+
+    <!-- 引入 Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- 
+        Shader Code: 自定义着色器用于制作大气层光晕效果 
+    -->
+    <script id="vertexShader" type="x-shader/x-vertex">
+        varying vec3 vNormal;
+        void main() {
+            // 计算法线向量并传递给片元着色器
+            vNormal = normalize(normalMatrix * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    </script>
