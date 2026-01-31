@@ -514,3 +514,14 @@
             })
         );
         earthGroup.add(earthMesh);
+        // 2. 创建大气层 (ShaderMaterial)
+        const atmosMat = new THREE.ShaderMaterial({
+            uniforms: { glowColor: { value: new THREE.Color(0x00aaff) } },
+            vertexShader: document.getElementById('vertexShader').textContent,
+            fragmentShader: document.getElementById('fragmentShader').textContent,
+            side: THREE.BackSide, // 渲染背面，使光晕包裹地球
+            blending: THREE.AdditiveBlending, // 叠加混合模式
+            transparent: true
+        });
+        const atmos = new THREE.Mesh(new THREE.SphereGeometry(1.25, 64, 64), atmosMat);
+        scene.add(atmos);
